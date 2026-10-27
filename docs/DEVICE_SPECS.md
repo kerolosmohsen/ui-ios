@@ -24,7 +24,7 @@ IDB's coordinate UI accepts integer locations in screen points with origin at th
 
 ## Device bezels
 
-Product bezel downloads are provided by [Apple Design Resources](https://developer.apple.com/design/resources/). The page currently lists iPhone 18 and iPhone 17 product bezel packages; the iPhone 15 package is retained from Apple's historical CDN path. See the extraction workflow before adding frame metadata to the catalog. The UI must use those product images without drawing a Dynamic Island or corner geometry by hand. Screen bounds are catalog metadata measured from the official image or its transparent display aperture, not guessed device dimensions.
+Product bezel downloads are provided by [Apple Design Resources](https://developer.apple.com/design/resources/). The page currently lists iPhone 18 and iPhone 17 product bezel packages; the iPhone 15 package is retained from Apple's historical CDN path. The iPhone 15 disk image opened an embedded Apple Marketing Artwork License prompt in the macOS runner, so it was not accepted automatically. The exact manual route is recorded in [MANUAL_STEPS.md](MANUAL_STEPS.md). Until then, the fallback must be measured from a real Simulator window screenshot, with the display aperture, Dynamic Island, and corner radius recorded in the catalog and report. The UI must not substitute guessed geometry.
 
 ## Verification status
 
