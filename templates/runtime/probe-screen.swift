@@ -30,6 +30,7 @@ final class ProbeSceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let scene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: scene)
+        window.backgroundColor = UIColor(red: 0.05, green: 0.72, blue: 0.48, alpha: 1)
         window.rootViewController = ProbeViewController()
         self.window = window
         window.makeKeyAndVisible()
