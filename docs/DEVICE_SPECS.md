@@ -28,4 +28,12 @@ Product bezel downloads are provided by [Apple Design Resources](https://develop
 
 ## Verification status
 
-The pixel-perfect profiles can only be confirmed on the macOS runner because Windows does not provide Xcode Simulator. Run the `Phase 0 iPhone device specifications` GitHub Actions workflow and inspect the `ui-ios-device-specs` artifact. No simulator measurements are recorded here until that run completes.
+The pixel-perfect profiles can only be confirmed on the macOS runner because Windows does not provide Xcode Simulator.
+
+The Phase 0 run on 2026-10-27 used the `macos-latest` runner image with macOS 26.6.2, Xcode 26.6 (build 17F113), and iOS 26.5. Its pre-created iPhone models included iPhone 17, iPhone 17 Pro, iPhone 17 Pro Max, and iPhone Air. `simctl list devicetypes` also exposed the exact iPhone 15 device type but no iPhone 18 Pro type. The workflow now creates iPhone 15 from that listed type on an installed runtime; it still fails instead of substituting another model for iPhone 18 Pro.
+
+The real iPhone 17 simulator profile measured 402 × 874 pt, 1206 × 2622 px, @3x, safe area top/bottom 62/34 pt, and status bar frame 20 pt. Its screenshot pixel size passes the 1206 × 2622 table check. The status bar is 20 pt rather than the supplied 54 pt, so the UI logs that mismatch and uses 20 pt. The screenshot and JSON profile are available in [the Phase 0 artifact](https://github.com/kerolosmohsen/ui-ios/actions/runs/40444268392/artifacts/12706854305).
+
+The iPhone 18 Pro points remain unconfirmed because Xcode 26.6 does not list that exact simulator device type. The Phase 0 workflow will fail until every catalog device can be booted and measured, and until each screenshot matches its expected pixel dimensions.
+
+The current simulator screenshot is a real device-screen capture but does not expose a contrasting Dynamic Island cutout or an outer handset bezel. No CSS island or corner radius has been invented. A frame is still pending either the authorized Apple asset route above or an image from a runner that can expose the complete simulator device bezel for measurement.

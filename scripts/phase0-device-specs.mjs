@@ -2,7 +2,7 @@ import {mkdir} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
-import {availableIphones, chooseSimulator, loadDeviceCatalog} from '../templates/runtime/simulator-utils.mjs';
+import {availableIphones, createSimulatorIfMissing, loadDeviceCatalog} from '../templates/runtime/simulator-utils.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const evidence = path.join(root, 'evidence', 'device-specs');
@@ -31,7 +31,7 @@ const probeScript = path.join(root, 'templates', 'runtime', 'probe-device.mjs');
 for (const device of catalog.devices) {
   let simulator = null;
   try {
-    simulator = chooseSimulator(device.id, devices, catalog);
+    simulator = createSimulatorIfMissing(device.id, devices, catalog, run);
     console.log(`Phase 0: checking ${device.label} (${simulator.runtime}, ${simulator.udid}).`);
     boot(simulator.udid);
     const profilePath = path.join(evidence, `${device.id}.json`);

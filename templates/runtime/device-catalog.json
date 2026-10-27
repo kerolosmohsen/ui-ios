@@ -5,6 +5,7 @@
       "id": "iphone15",
       "label": "iPhone 15",
       "simulatorNames": ["iPhone 15"],
+      "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-15",
       "expected": {
         "points": { "width": 393, "height": 852 },
         "pixels": { "width": 1179, "height": 2556 },
@@ -21,6 +22,7 @@
       "id": "iphone17",
       "label": "iPhone 17",
       "simulatorNames": ["iPhone 17"],
+      "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
       "expected": {
         "points": { "width": 402, "height": 874 },
         "pixels": { "width": 1206, "height": 2622 },

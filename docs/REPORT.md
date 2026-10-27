@@ -16,7 +16,9 @@
 - GitHub Pages returned HTTP 200 and the expected simulator UI markers.
 - The Phase 0 macOS proof built and launched a React Native app, streamed simulator frames, and accepted taps. The server-side latency numbers are documented with their scope and limitations.
 - Added a config-driven iPhone 15 / iPhone 17 / iPhone 18 Pro catalog, runtime UIKit/IDB display probing, exact screenshot pixel checks, and browser mapping from the screen aperture to IDB point coordinates. See [DEVICE_SPECS.md](DEVICE_SPECS.md).
-- Added a macOS Phase 0 workflow that captures one pixel-checked screenshot and profile per catalog simulator; the first run is still required to record real simulator measurements.
+- Added a macOS Phase 0 workflow that captures one pixel-checked screenshot and profile per catalog simulator. Its first real run captured iPhone 17; Phase 0 is rerunning after adding creation of the exact iPhone 15 device type exposed by Xcode.
+- Verified iPhone 17 on the current `macos-latest` image: 402 × 874 pt, 1206 × 2622 px, @3x, safe area 62/34 pt. The runtime status bar measured 20 pt (the supplied reference is 54 pt), so the runtime value is used with a warning. The aggregate Phase 0 run fails because Xcode 26.6 does not expose exact iPhone 15 or iPhone 18 Pro simulators.
+- Apple bezel extraction stopped at an embedded artwork license prompt and was not accepted automatically. No guessed device frame or Dynamic Island geometry is used; the exact manual steps and current frame limitation are documented.
 
 ## Pending end-to-end session
 

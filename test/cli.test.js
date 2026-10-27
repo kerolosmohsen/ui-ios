@@ -255,7 +255,7 @@ test('reports an oversized snapshot with the largest file list', async () => {
 });
 
 test('uses exact device names from the config-driven simulator catalog', async () => {
-  const { availableIphones, chooseSimulator } = await import('../templates/runtime/simulator-utils.mjs');
+  const { availableIphones, chooseSimulator, createSimulatorIfMissing } = await import('../templates/runtime/simulator-utils.mjs');
   const devices = availableIphones({
     devices: {
       'iOS-27': [
@@ -273,6 +273,14 @@ test('uses exact device names from the config-driven simulator catalog', async (
   assert.equal(chooseSimulator('iphone18pro', devices).udid, '18p');
   assert.throws(() => chooseSimulator('iphone18pro', devices.filter((device) => device.udid !== '18p')), /No available iPhone 18 Pro/);
   assert.throws(() => chooseSimulator('iphone18', devices), /Unknown simulator device/);
+  const created = createSimulatorIfMissing('iphone15', devices.filter((device) => device.name !== 'iPhone 15'), undefined, (command, args) => {
+    assert.equal(command, 'xcrun');
+    assert.deepEqual(args, ['simctl', 'create', 'iPhone 15', 'com.apple.CoreSimulator.SimDeviceType.iPhone-15', 'iOS-27']);
+    return 'ABCD1234-ABCD-ABCD-ABCD-ABCD1234ABCD';
+  });
+  assert.equal(created.createdForTask, true);
+  assert.equal(created.name, 'iPhone 15');
+  assert.equal(created.udid, 'ABCD1234-ABCD-ABCD-ABCD-ABCD1234ABCD');
 });
 
 test('checks the confirmed device pixel sizes and leaves unconfirmed profile values to runtime', async () => {
@@ -282,11 +290,20 @@ test('checks the confirmed device pixel sizes and leaves unconfirmed profile val
   const iphone18pro = DEVICE_CATALOG.devices.find((device) => device.id === 'iphone18pro');
   assert.deepEqual(iphone15.expected.points, { width: 393, height: 852 });
   assert.deepEqual(iphone15.expected.pixels, { width: 1179, height: 2556 });
+  assert.equal(iphone15.expected.scale, 3);
+  assert.equal(iphone15.expected.diagonalInches, 6.1);
+  assert.equal(iphone15.expected.ppi, 460);
+  assert.deepEqual(iphone15.expected.bodyMm, { height: 147.6, width: 71.6, depth: 7.8 });
   assert.deepEqual(iphone15.expected.safeAreaInsetsPoints, { top: 59, bottom: 34 });
+  assert.equal(iphone17.expected.diagonalInches, 6.3);
+  assert.deepEqual(iphone17.expected.bodyMm, { height: 149.6, width: 71.5, depth: 7.95 });
   assert.equal(iphone17.expected.safeAreaInsetsPoints.top, 62);
   assert.equal(iphone17.expected.safeAreaInsetsPoints.bottom, null);
   assert.equal(iphone18pro.label, 'iPhone 18 Pro');
   assert.deepEqual(iphone18pro.expected.points, null);
+  assert.deepEqual(iphone18pro.expected.pixels, { width: 1206, height: 2622 });
+  assert.equal(iphone18pro.expected.scale, 3);
+  assert.deepEqual(iphone18pro.expected.bodyMm, { height: 150, width: 71.9, depth: 8.75 });
   assert.equal(iphone18pro.expected.statusBarHeightPoints, null);
   assert.deepEqual(iphone18pro.expected.safeAreaInsetsPoints, { top: null, bottom: null });
   const runtime = {

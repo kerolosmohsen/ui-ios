@@ -1,5 +1,5 @@
 import {spawnSync} from 'node:child_process';
-import {availableIphones, chooseSimulator, loadDeviceCatalog} from './simulator-utils.mjs';
+import {availableIphones, createSimulatorIfMissing, loadDeviceCatalog} from './simulator-utils.mjs';
 
 function run(command, args) {
   const result = spawnSync(command, args, {encoding: 'utf8', maxBuffer: 16 * 1024 * 1024});
@@ -15,7 +15,7 @@ run('xcrun', ['simctl', 'list', 'devicetypes']);
 const runtimeList = run('xcrun', ['simctl', 'list', 'runtimes']);
 const available = JSON.parse(run('xcrun', ['simctl', 'list', 'devices', 'available', '--json']));
 const devices = availableIphones(available, catalog);
-const selected = chooseSimulator(preference, devices, catalog);
+const selected = createSimulatorIfMissing(preference, devices, catalog, run);
 if (!selected?.udid) throw new Error('Could not find a simulator UDID.');
 const bootStarted = Date.now();
 const boot = spawnSync('xcrun', ['simctl', 'boot', selected.udid], {encoding: 'utf8', maxBuffer: 1024 * 1024});

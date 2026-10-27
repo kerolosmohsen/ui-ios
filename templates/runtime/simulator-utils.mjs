@@ -32,6 +32,39 @@ export function chooseSimulator(preset, devices, catalog = loadDeviceCatalog()) 
   return [...candidates].sort((left, right) => right.runtime.localeCompare(left.runtime))[0];
 }
 
+export function createSimulatorIfMissing(preset, devices, catalog, run) {
+  try {
+    return chooseSimulator(preset, devices, catalog);
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.startsWith('No available ')) throw error;
+  }
+
+  const spec = getDevicePreset(preset, catalog);
+  if (!spec.deviceTypeIdentifier) {
+    throw new Error(`Xcode does not list an available ${spec.label} simulator device type. Install an Xcode runtime that supports this exact model.`);
+  }
+  const runtimes = [...new Set(devices.map((device) => device.runtime))].sort((left, right) => {
+    const version = (value) => value.match(/iOS-(\d+)-(\d+)/)?.slice(1).map(Number) ?? [0, 0];
+    const [leftMajor, leftMinor] = version(left);
+    const [rightMajor, rightMinor] = version(right);
+    return rightMajor - leftMajor || rightMinor - leftMinor;
+  });
+  if (!runtimes.length) throw new Error('No installed iOS Simulator runtime is available to create the requested device.');
+
+  const errors = [];
+  for (const runtime of runtimes) {
+    try {
+      const output = run('xcrun', ['simctl', 'create', spec.simulatorNames[0], spec.deviceTypeIdentifier, runtime]);
+      const udid = output.match(/[A-F0-9-]{36}/i)?.[0];
+      if (!udid) throw new Error('simctl create returned no Simulator UDID.');
+      return {name: spec.simulatorNames[0], udid, runtime, isAvailable: true, createdForTask: true};
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  throw new Error(`Could not create ${spec.label} on the installed iOS runtimes: ${errors.join(' | ')}`);
+}
+
 export function readPngDimensions(buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 24 || buffer.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') {
     throw new Error('Simulator screenshot is not a valid PNG.');
