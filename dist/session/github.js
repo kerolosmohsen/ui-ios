@@ -56,23 +56,37 @@ class GitHubClient {
             GITHUB_TOKEN: this.token,
             GIT_TERMINAL_PROMPT: '0',
         };
-        const child = (0, node_child_process_1.spawn)(this.executable, args, {
-            cwd,
-            env: {
-                ...env,
-            },
-            windowsHide: true,
-            stdio: ['pipe', 'pipe', 'pipe'],
-        });
+        let attempt = 0;
         let stdout = '';
         let stderr = '';
-        child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk; });
-        child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk; });
-        const exit = await new Promise((resolve) => {
-            child.once('error', (error) => resolve({ code: 1, error }));
-            child.once('close', (code) => resolve({ code: code ?? 1 }));
-            child.stdin.end(input);
-        });
+        let exit = { code: 1 };
+        while (attempt < 3) {
+            stdout = '';
+            stderr = '';
+            try {
+                const child = (0, node_child_process_1.spawn)(this.executable, args, {
+                    cwd,
+                    env,
+                    windowsHide: true,
+                    stdio: ['pipe', 'pipe', 'pipe'],
+                });
+                child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk; });
+                child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk; });
+                exit = await new Promise((resolve) => {
+                    child.once('error', (error) => resolve({ code: 1, error }));
+                    child.once('close', (code) => resolve({ code: code ?? 1 }));
+                    child.stdin.end(input);
+                });
+            }
+            catch (error) {
+                exit = { code: 1, error: error instanceof Error ? error : new Error(String(error)) };
+            }
+            const errorCode = exit.error?.code;
+            if (!exit.error || !['UNKNOWN', 'EAGAIN'].includes(errorCode ?? '') || attempt >= 2)
+                break;
+            attempt += 1;
+            await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+        }
         if (exit.code !== 0) {
             const detail = (exit.error?.message ?? stderr.trim()) || `GitHub CLI exited with code ${exit.code}.`;
             throw new Error(redact(detail, this.token));

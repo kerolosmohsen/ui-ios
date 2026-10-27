@@ -60,23 +60,35 @@ export class GitHubClient {
       GITHUB_TOKEN: this.token,
       GIT_TERMINAL_PROMPT: '0',
     };
-    const child = spawn(this.executable, args, {
-      cwd,
-      env: {
-        ...env,
-      },
-      windowsHide: true,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    let attempt = 0;
     let stdout = '';
     let stderr = '';
-    child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk; });
-    child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
-    const exit = await new Promise<{ code: number; error?: Error }>((resolve) => {
-      child.once('error', (error) => resolve({ code: 1, error }));
-      child.once('close', (code) => resolve({ code: code ?? 1 }));
-      child.stdin.end(input);
-    });
+    let exit: { code: number; error?: Error } = { code: 1 };
+    while (attempt < 3) {
+      stdout = '';
+      stderr = '';
+      try {
+        const child = spawn(this.executable, args, {
+          cwd,
+          env,
+          windowsHide: true,
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk; });
+        child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
+        exit = await new Promise<{ code: number; error?: Error }>((resolve) => {
+          child.once('error', (error) => resolve({ code: 1, error }));
+          child.once('close', (code) => resolve({ code: code ?? 1 }));
+          child.stdin.end(input);
+        });
+      } catch (error) {
+        exit = { code: 1, error: error instanceof Error ? error : new Error(String(error)) };
+      }
+      const errorCode = (exit.error as (Error & { code?: string }) | undefined)?.code;
+      if (!exit.error || !['UNKNOWN', 'EAGAIN'].includes(errorCode ?? '') || attempt >= 2) break;
+      attempt += 1;
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
     if (exit.code !== 0) {
       const detail = (exit.error?.message ?? stderr.trim()) || `GitHub CLI exited with code ${exit.code}.`;
       throw new Error(redact(detail, this.token));
