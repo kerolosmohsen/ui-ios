@@ -15,6 +15,8 @@
 - `node bin/ui-ios.js --help` and `node bin/ui-ios.js doctor` run successfully.
 - GitHub Pages returned HTTP 200 and the expected simulator UI markers.
 - The Phase 0 macOS proof built and launched a React Native app, streamed simulator frames, and accepted taps. The server-side latency numbers are documented with their scope and limitations.
+- Added a config-driven iPhone 15 / iPhone 17 / iPhone 18 Pro catalog, runtime UIKit/IDB display probing, exact screenshot pixel checks, and browser mapping from the screen aperture to IDB point coordinates. See [DEVICE_SPECS.md](DEVICE_SPECS.md).
+- Added a macOS Phase 0 workflow that captures one pixel-checked screenshot and profile per catalog simulator; the first run is still required to record real simulator measurements.
 
 ## Pending end-to-end session
 

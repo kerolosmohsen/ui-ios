@@ -10,7 +10,7 @@ const vm = require('node:vm');
 
 const { detectReactNativeProject } = require('../src/utils/detector');
 const { generateDetoxConfig } = require('../src/templates/detoxrc');
-const { DEFAULT_CONFIG, readConfig, serializeConfig, validateConfig } = require('../dist/session/config');
+const { DEFAULT_CONFIG, DEVICE_CATALOG, DEVICE_IDS, readConfig, serializeConfig, validateConfig } = require('../dist/session/config');
 const { createProjectSnapshot, SnapshotTooLargeError } = require('../dist/session/snapshot');
 
 function createProject({ workspace = true, project = true, podfile = false } = {}) {
@@ -135,7 +135,14 @@ test('init writes configuration, adds ignore paths, and preserves them on later 
 
 test('validates session settings and refuses unsupported device choices', () => {
   assert.deepEqual(validateConfig(JSON.parse(serializeConfig(DEFAULT_CONFIG))), DEFAULT_CONFIG);
-  assert.throws(() => validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone15'] }), /exactly "iphone15" and "latest"/);
+  assert.deepEqual(DEVICE_IDS, ['iphone15', 'iphone17', 'iphone18pro']);
+  assert.deepEqual(validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone15'] }).devices, ['iphone15']);
+  assert.deepEqual(validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone15', 'latest'], defaultDevice: 'latest' }), {
+    ...DEFAULT_CONFIG,
+    devices: ['iphone15', 'iphone17'],
+    defaultDevice: 'iphone17',
+  });
+  assert.throws(() => validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone18'] }), /Unknown simulator device/);
   assert.throws(() => validateConfig({ ...DEFAULT_CONFIG, idleTimeoutMinutes: 331 }), /between 1 and 330/);
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-ios-config-'));
   try {
@@ -247,33 +254,72 @@ test('reports an oversized snapshot with the largest file list', async () => {
   }
 });
 
-test('matches the requested iPhone 15 preset or newest available standard device', async () => {
+test('uses exact device names from the config-driven simulator catalog', async () => {
   const { availableIphones, chooseSimulator } = await import('../templates/runtime/simulator-utils.mjs');
   const devices = availableIphones({
     devices: {
-      'iOS-18': [
-        { name: 'iPhone 14', udid: '14', isAvailable: true },
+      'iOS-27': [
         { name: 'iPhone 15', udid: '15', isAvailable: true },
-        { name: 'iPhone 16 Pro', udid: '16p', isAvailable: true },
-      ],
-      'iOS-19': [
         { name: 'iPhone 17', udid: '17', isAvailable: true },
+        { name: 'iPhone 18 Pro', udid: '18p', isAvailable: true },
         { name: 'iPhone 18', udid: '18', isAvailable: true },
-        { name: 'iPhone 19', udid: '19', isAvailable: false },
+        { name: 'iPhone 18 Pro', udid: '18p-old', isAvailable: false },
       ],
     },
   });
+  assert.deepEqual(devices.map((device) => device.name), ['iPhone 15', 'iPhone 17', 'iPhone 18 Pro']);
   assert.equal(chooseSimulator('iphone15', devices).udid, '15');
-  assert.equal(chooseSimulator('latest', devices).udid, '18');
-  assert.throws(() => chooseSimulator('iphone18', devices), /Unsupported/);
+  assert.equal(chooseSimulator('iphone17', devices).udid, '17');
+  assert.equal(chooseSimulator('iphone18pro', devices).udid, '18p');
+  assert.throws(() => chooseSimulator('iphone18pro', devices.filter((device) => device.udid !== '18p')), /No available iPhone 18 Pro/);
+  assert.throws(() => chooseSimulator('iphone18', devices), /Unknown simulator device/);
 });
 
-test('has a syntactically valid browser client and exactly two simulator choices', () => {
+test('checks the confirmed device pixel sizes and leaves unconfirmed profile values to runtime', async () => {
+  const { compareDeviceProfile, normalizedToScreenPoint, pixelSizeMatches, strictDeviceProfileFailures } = await import('../templates/runtime/simulator-utils.mjs');
+  const iphone15 = DEVICE_CATALOG.devices.find((device) => device.id === 'iphone15');
+  const iphone17 = DEVICE_CATALOG.devices.find((device) => device.id === 'iphone17');
+  const iphone18pro = DEVICE_CATALOG.devices.find((device) => device.id === 'iphone18pro');
+  assert.deepEqual(iphone15.expected.points, { width: 393, height: 852 });
+  assert.deepEqual(iphone15.expected.pixels, { width: 1179, height: 2556 });
+  assert.deepEqual(iphone15.expected.safeAreaInsetsPoints, { top: 59, bottom: 34 });
+  assert.equal(iphone17.expected.safeAreaInsetsPoints.top, 62);
+  assert.equal(iphone17.expected.safeAreaInsetsPoints.bottom, null);
+  assert.equal(iphone18pro.label, 'iPhone 18 Pro');
+  assert.deepEqual(iphone18pro.expected.points, null);
+  assert.equal(iphone18pro.expected.statusBarHeightPoints, null);
+  assert.deepEqual(iphone18pro.expected.safeAreaInsetsPoints, { top: null, bottom: null });
+  const runtime = {
+    points: { width: 402, height: 874 },
+    pixels: { width: 1206, height: 2622 },
+    scale: 3,
+    statusBarHeightPoints: 55,
+    safeAreaInsetsPoints: { top: 63, bottom: 34 },
+  };
+  assert.deepEqual(compareDeviceProfile(iphone18pro, runtime), []);
+  assert.match(compareDeviceProfile(iphone18pro, { ...runtime, points: { width: 402, height: 873 } })[0], /height \(pt\): table=874/);
+  assert.equal(pixelSizeMatches(iphone18pro, runtime.pixels), true);
+  assert.equal(pixelSizeMatches(iphone18pro, { width: 1179, height: 2556 }), false);
+  assert.deepEqual(strictDeviceProfileFailures(iphone18pro, runtime), []);
+  assert.match(strictDeviceProfileFailures(iphone18pro, { ...runtime, points: { width: 402, height: 873 } })[0], /expected runtime points 402x874/);
+  assert.match(strictDeviceProfileFailures(iphone18pro, { ...runtime, pixels: { width: 1179, height: 2556 } })[0], /expected screenshot 1206x2622/);
+  assert.equal(DEVICE_CATALOG.devices.some((device) => device.id === 'iphone18'), false);
+  assert.equal(normalizedToScreenPoint(0, 402), 0);
+  assert.equal(normalizedToScreenPoint(0.5, 402), 201);
+  assert.equal(normalizedToScreenPoint(1, 402), 401);
+  assert.throws(() => normalizedToScreenPoint(1.1, 402), /outside the measured simulator screen/);
+});
+
+test('has a valid browser client with runtime device options and an undistorted screen hit area', () => {
   const html = fs.readFileSync(path.resolve(__dirname, '../site/index.html'), 'utf8');
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(script, 'The static page should contain its browser client.');
   assert.doesNotThrow(() => new vm.Script(script));
-  assert.match(html, /<option value="iphone15">/);
-  assert.match(html, /<option value="latest">/);
-  assert.equal((html.match(/<option value=/g) || []).length, 2);
+  assert.match(html, /message\.devices/);
+  assert.match(html, /setDeviceOptions\(message\.devices, message\.preset, message\.logicalSize\)/);
+  assert.match(html, /object-fit:contain/);
+  assert.match(html, /getBoundingClientRect\(\)/);
+  assert.match(html, /id="displayDetails"/);
+  assert.doesNotMatch(html, /class="island"|class="homebar"|\.island\{|\.homebar\{/);
+  assert.equal((html.match(/<option value=/g) || []).length, 1);
 });

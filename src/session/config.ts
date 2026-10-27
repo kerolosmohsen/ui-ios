@@ -3,11 +3,18 @@ import path from 'node:path';
 import { DevicePreset, UiIosConfig } from './types';
 
 export const CONFIG_FILE = 'ui-ios.config.json';
+type DeviceCatalog = { version: number; devices: Array<{ id: string; label: string; simulatorNames: string[] }> };
+const catalogPath = path.resolve(__dirname, '../../templates/runtime/device-catalog.json');
+export const DEVICE_CATALOG: DeviceCatalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as DeviceCatalog;
+if (DEVICE_CATALOG.version !== 1 || !Array.isArray(DEVICE_CATALOG.devices)) {
+  throw new Error('The simulator device catalog is invalid.');
+}
+export const DEVICE_IDS = DEVICE_CATALOG.devices.map((device) => device.id) as DevicePreset[];
 
 export const DEFAULT_CONFIG: UiIosConfig = {
   version: 1,
   sessionRepository: '',
-  devices: ['iphone15', 'latest'],
+  devices: [...DEVICE_IDS],
   defaultDevice: 'iphone15',
   idleTimeoutMinutes: 30,
   includeEnv: false,
@@ -51,12 +58,17 @@ export function validateConfig(value: unknown): UiIosConfig {
   if (input.sessionRepository && !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(input.sessionRepository)) {
     throw new Error('sessionRepository must use the owner/repository format.');
   }
-  if (!Array.isArray(input.devices) || input.devices.length !== 2 ||
-      !input.devices.includes('iphone15') || !input.devices.includes('latest')) {
-    throw new Error('devices must contain exactly "iphone15" and "latest".');
+  if (!Array.isArray(input.devices) || input.devices.length < 1 || input.devices.some((device) => typeof device !== 'string')) {
+    throw new Error('devices must be a non-empty array of simulator catalog IDs.');
   }
-  if (input.defaultDevice !== 'iphone15' && input.defaultDevice !== 'latest') {
-    throw new Error('defaultDevice must be "iphone15" or "latest".');
+  const devices = [...new Set(input.devices.map((device) => device === 'latest' ? 'iphone17' : device))];
+  if (devices.length !== input.devices.length) throw new Error('devices cannot contain duplicate simulator IDs.');
+  for (const device of devices) {
+    if (!DEVICE_IDS.includes(device as DevicePreset)) throw new Error(`Unknown simulator device "${device}".`);
+  }
+  const defaultDevice = input.defaultDevice === 'latest' ? 'iphone17' : input.defaultDevice;
+  if (typeof defaultDevice !== 'string' || !devices.includes(defaultDevice)) {
+    throw new Error('defaultDevice must be included in devices.');
   }
   if (!Number.isInteger(input.idleTimeoutMinutes) ||
       (input.idleTimeoutMinutes ?? 0) < 1 || (input.idleTimeoutMinutes ?? 0) > 330) {
@@ -77,8 +89,8 @@ export function validateConfig(value: unknown): UiIosConfig {
   return {
     version: 1,
     sessionRepository: input.sessionRepository ?? '',
-    devices: ['iphone15', 'latest'],
-    defaultDevice: input.defaultDevice as DevicePreset,
+    devices,
+    defaultDevice: defaultDevice as DevicePreset,
     idleTimeoutMinutes: input.idleTimeoutMinutes as number,
     includeEnv: input.includeEnv,
     excludeGlobs: input.excludeGlobs,

@@ -1,5 +1,5 @@
 import {spawnSync} from 'node:child_process';
-import {availableIphones, chooseSimulator} from './simulator-utils.mjs';
+import {availableIphones, chooseSimulator, loadDeviceCatalog} from './simulator-utils.mjs';
 
 function run(command, args) {
   const result = spawnSync(command, args, {encoding: 'utf8', maxBuffer: 16 * 1024 * 1024});
@@ -8,13 +8,14 @@ function run(command, args) {
 }
 
 const preference = process.env.DEVICE_PRESET;
-if (!['iphone15', 'latest'].includes(preference)) throw new Error('Unsupported simulator preference.');
+const catalog = loadDeviceCatalog();
+if (!catalog.devices.some((device) => device.id === preference)) throw new Error('Unsupported simulator preference.');
 const xcode = run('xcodebuild', ['-version']).replace(/\r/g, '').trim().replace(/\n/g, ' · ');
 run('xcrun', ['simctl', 'list', 'devicetypes']);
 const runtimeList = run('xcrun', ['simctl', 'list', 'runtimes']);
 const available = JSON.parse(run('xcrun', ['simctl', 'list', 'devices', 'available', '--json']));
-const devices = availableIphones(available);
-const selected = chooseSimulator(preference, devices);
+const devices = availableIphones(available, catalog);
+const selected = chooseSimulator(preference, devices, catalog);
 if (!selected?.udid) throw new Error('Could not find a simulator UDID.');
 const bootStarted = Date.now();
 const boot = spawnSync('xcrun', ['simctl', 'boot', selected.udid], {encoding: 'utf8', maxBuffer: 1024 * 1024});
@@ -28,3 +29,4 @@ console.error(`Available iOS runtime summary: ${runtimeList.split(/\r?\n/).filte
 console.log(`name=${selected.name}`);
 console.log(`udid=${selected.udid}`);
 console.log(`boot_seconds=${bootSeconds}`);
+console.log(`preset=${preference}`);

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "devices": [
+    {
+      "id": "iphone15",
+      "label": "iPhone 15",
+      "simulatorNames": ["iPhone 15"],
+      "expected": {
+        "points": { "width": 393, "height": 852 },
+        "pixels": { "width": 1179, "height": 2556 },
+        "scale": 3,
+        "diagonalInches": 6.1,
+        "ppi": 460,
+        "bodyMm": { "height": 147.6, "width": 71.6, "depth": 7.8 },
+        "dynamicIsland": true,
+        "statusBarHeightPoints": 54,
+        "safeAreaInsetsPoints": { "top": 59, "bottom": 34 }
+      }
+    },
+    {
+      "id": "iphone17",
+      "label": "iPhone 17",
+      "simulatorNames": ["iPhone 17"],
+      "expected": {
+        "points": { "width": 402, "height": 874 },
+        "pixels": { "width": 1206, "height": 2622 },
+        "scale": 3,
+        "diagonalInches": 6.3,
+        "ppi": 460,
+        "bodyMm": { "height": 149.6, "width": 71.5, "depth": 7.95 },
+        "dynamicIsland": true,
+        "statusBarHeightPoints": 54,
+        "safeAreaInsetsPoints": { "top": 62, "bottom": null }
+      }
+    },
+    {
+      "id": "iphone18pro",
+      "label": "iPhone 18 Pro",
+      "simulatorNames": ["iPhone 18 Pro"],
+      "expected": {
+        "points": null,
+        "pointsDerivedFromPixels": true,
+        "pixels": { "width": 1206, "height": 2622 },
+        "scale": 3,
+        "diagonalInches": 6.3,
+        "ppi": 460,
+        "bodyMm": { "height": 150.0, "width": 71.9, "depth": 8.75 },
+        "dynamicIsland": true,
+        "statusBarHeightPoints": null,
+        "safeAreaInsetsPoints": { "top": null, "bottom": null }
+      }
+    }
+  ]
+}

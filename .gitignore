@@ -14,5 +14,6 @@ credentials*
 .ui-ios/
 .tools/
 /MyTestApp/
+/evidence/device-specs/
 /.pages-deploy/
 codex-prompt.md

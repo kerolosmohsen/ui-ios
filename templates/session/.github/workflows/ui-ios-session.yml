@@ -12,12 +12,9 @@ on:
         required: true
         type: string
       device:
-        description: Simulator preference
+        description: Simulator device catalog ID
         required: true
-        type: choice
-        options:
-          - iphone15
-          - latest
+        type: string
       session_token:
         description: One-session browser authentication token
         required: true
@@ -127,6 +124,23 @@ jobs:
           echo "DERIVED_DATA=$HOME/Library/Developer/Xcode/DerivedData/ui-ios-preview" >> "$GITHUB_ENV"
           DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/ui-ios-preview" node ui-ios-runtime/build-ios.mjs >> "$GITHUB_OUTPUT"
 
+      - name: Refresh the trusted preview runtime after project build scripts
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/kerolosmohsen/ui-ios.git "$RUNNER_TEMP/ui-ios-tool-source"
+          cp "$RUNNER_TEMP/ui-ios-tool-source/templates/runtime/"*.mjs ui-ios-runtime/
+          cp "$RUNNER_TEMP/ui-ios-tool-source/templates/runtime/"*.json ui-ios-runtime/
+          cp "$RUNNER_TEMP/ui-ios-tool-source/templates/runtime/"*.swift ui-ios-runtime/
+
+      - name: Probe simulator points, pixels, status bar, and safe area
+        env:
+          DEVICE_PRESET: ${{ inputs.device }}
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+          SIMULATOR_NAME: ${{ steps.simulator.outputs.name }}
+          DEVICE_PROFILE_PATH: ${{ runner.temp }}/device-profile.json
+          DEVICE_SCREENSHOT_PATH: ${{ runner.temp }}/device-screen.png
+        run: node ui-ios-runtime/probe-device.mjs
+
       - name: Install and launch the app
         env:
           SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
@@ -146,12 +160,6 @@ jobs:
             echo "APP_BUNDLE_ID=$APP_BUNDLE_ID"
           } >> "$GITHUB_ENV"
 
-      - name: Refresh the trusted preview runtime after project build scripts
-        run: |
-          set -euo pipefail
-          git clone --depth 1 https://github.com/kerolosmohsen/ui-ios.git "$RUNNER_TEMP/ui-ios-tool-source"
-          cp "$RUNNER_TEMP/ui-ios-tool-source/templates/runtime/"*.mjs ui-ios-runtime/
-
       - name: Start the browser preview and wait for stop or timeout
         env:
           SESSION_ID: ${{ inputs.session_id }}
@@ -163,6 +171,8 @@ jobs:
           APP_PATH: ${{ steps.build.outputs.app_path }}
           APP_BUNDLE_ID: ${{ steps.build.outputs.bundle_id }}
           BOOT_SECONDS: ${{ steps.simulator.outputs.boot_seconds }}
+          DEVICE_PRESET: ${{ inputs.device }}
+          DEVICE_PROFILE_PATH: ${{ runner.temp }}/device-profile.json
           RUN_ID: ${{ github.run_id }}
           REPOSITORY: ${{ github.repository }}
           ALLOWED_ORIGIN: https://${{ github.repository_owner }}.github.io

@@ -1,4 +1,4 @@
-export type DevicePreset = 'iphone15' | 'latest';
+export type DevicePreset = string;
 export type StreamFormat = 'jpeg';
 
 export interface UiIosConfig {

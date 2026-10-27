@@ -41,14 +41,14 @@ ui-ios start
 
 ```text
 ui-ios init [--dry-run] [--skip-install] [--yes] [--force]
-ui-ios start [--device iphone15|latest] [--verbose] [--include-env]
+ui-ios start [--device iphone15|iphone17|iphone18pro] [--verbose] [--include-env]
 ui-ios stop
 ui-ios status
 ui-ios logs
 ui-ios doctor
 ```
 
-`ui-ios init` leaves an existing `ui-ios.config.json` unchanged. `--force` replaces it. The default device preference is the closest available standard iPhone to iPhone 15; `latest` selects the newest available standard iPhone. The CLI reports the actual simulator selected on the runner.
+`ui-ios init` leaves an existing `ui-ios.config.json` unchanged. `--force` replaces it. The device selector comes from `templates/runtime/device-catalog.json` and currently offers iPhone 15, iPhone 17, and iPhone 18 Pro. Each selection requires an exact simulator model match; the runner will not silently substitute a different iPhone. The catalog is config-driven, so adding another supported model requires one catalog entry plus its verified bezel asset.
 
 `ui-ios stop` cancels the run and removes the temporary branch. Closing the terminal without stopping still leaves a five-minute heartbeat timeout. If the CLI process remains running, Ctrl+C also cancels the job and removes the branch.
 
@@ -60,7 +60,7 @@ ui-ios doctor
 {
   "version": 1,
   "sessionRepository": "",
-  "devices": ["iphone15", "latest"],
+  "devices": ["iphone15", "iphone17", "iphone18pro"],
   "defaultDevice": "iphone15",
   "idleTimeoutMinutes": 30,
   "includeEnv": false,
@@ -80,8 +80,9 @@ The snapshot always excludes `node_modules/`, `android/`, `ios/Pods/`, `ios/buil
 - Tap or swipe inside the simulator screen.
 - Home, Lock, Rotate, Screenshot, Relaunch, and Shake.
 - Dark/light appearance, app logs, and text input.
-- Choose either the iPhone 15 closest match or the latest available iPhone. Changing the selection boots another simulator and reinstalls the app.
-- The status panel reports the connection, actual device, frame rate, tap response, screen dimensions, and remaining time.
+- Choose iPhone 15, iPhone 17, or iPhone 18 Pro. Changing the selection boots that exact simulator and reinstalls the app.
+- The status panel reports the connection, actual device, frame rate, tap response, runtime point and pixel dimensions, status bar, safe area, and remaining time.
+- Taps and swipes are mapped from the displayed screen rectangle into the simulator's runtime point coordinates; the bezel is excluded.
 
 The runner installs JavaScript dependencies and CocoaPods, selects an available Xcode simulator, builds a Debug app with its JavaScript bundle embedded, and starts IDB. The default screen transport is IDB MJPEG; `simctl` screenshots converted to JPEG are the fallback. App logs and screenshots are uploaded as a seven-day Actions artifact when the job ends.
 
@@ -97,5 +98,7 @@ The runner installs JavaScript dependencies and CocoaPods, selects an available 
 ## Phase 0 evidence
 
 The feasibility workflow built and launched `MyTestApp` on `macos-latest`, streamed the iPhone 17 simulator with IDB MJPEG, and accepted IDB taps. The measured server-side response from receiving the tap through the command and next frame was a median of 1.11 seconds; it does not include browser-to-runner network or image display time. See [PHASE0_REPORT.md](PHASE0_REPORT.md) and [the saved screenshots](evidence/phase0/).
+
+The device table, unconfirmed safe-area values, runtime profile checks, and the Phase 0 pixel-size workflow are documented in [docs/DEVICE_SPECS.md](docs/DEVICE_SPECS.md). The manual Apple asset workflow extracts official bezel packages from [Apple Design Resources](https://developer.apple.com/design/resources/); frame metadata is added only after the source image and screen aperture are verified.
 
 GitHub Pages requires a public repository on GitHub Free. The Pages UI is therefore served from this public tool repository; project snapshots and the runner workflow stay in the separate private sessions repository.

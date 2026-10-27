@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {WebSocketServer, WebSocket} from 'ws';
+import {getDevicePreset, loadDeviceCatalog, normalizedToScreenPoint} from './simulator-utils.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const token = process.env.SESSION_TOKEN ?? '';
@@ -14,15 +15,22 @@ const maxSessionMs = 330 * 60 * 1000;
 const maxHeartbeatSilenceMs = 5 * 60 * 1000;
 const port = Number(process.env.PORT ?? 8787);
 const evidenceDir = path.resolve(here, 'runner-evidence');
+const profilePath = path.resolve(process.env.DEVICE_PROFILE_PATH ?? path.join(here, 'device-profile.json'));
 const config = await readConfig();
+const deviceCatalog = loadDeviceCatalog();
+const enabledDevices = Array.isArray(config.devices) ? config.devices : deviceCatalog.devices.map((device) => device.id);
 const idleTimeoutMs = Number(process.env.IDLE_TIMEOUT_MS ?? Number(config.idleTimeoutMinutes ?? 30) * 60_000);
 const fps = Math.max(1, Math.min(10, Number(config.fps) || 5));
 let udid = process.env.SIMULATOR_UDID ?? '';
 let deviceName = process.env.SIMULATOR_NAME ?? 'iPhone Simulator';
+let devicePreset = process.env.DEVICE_PRESET ?? config.defaultDevice ?? 'iphone15';
+if (!enabledDevices.includes(devicePreset)) throw new Error(`The selected simulator ${devicePreset} is not enabled by ui-ios.config.json.`);
+getDevicePreset(devicePreset, deviceCatalog);
 const appPath = process.env.APP_PATH ?? '';
 const bundleId = process.env.APP_BUNDLE_ID ?? '';
 const startedAt = Date.now();
 let logicalSize = await getLogicalSize(udid);
+let deviceProfile = await readDeviceProfile(devicePreset, udid);
 let provider = 'idb-video-stream-mjpeg';
 let streamProcess = null;
 let appLogProcess = null;
@@ -98,6 +106,30 @@ async function getLogicalSize(targetUdid) {
   const dimensions = findDimensions(JSON.parse(output));
   if (!dimensions) throw new Error('IDB did not return simulator screen dimensions.');
   return dimensions;
+}
+
+async function readDeviceProfile(preset, targetUdid) {
+  let profile;
+  try { profile = JSON.parse(await readFile(profilePath, 'utf8')); }
+  catch { throw new Error(`Runtime screen profile is missing at ${profilePath}.`); }
+  if (profile.preset !== preset || profile.simulatorUdid !== targetUdid) {
+    throw new Error('Runtime screen profile does not match the selected simulator.');
+  }
+  return profile;
+}
+
+function currentDevicePayload() {
+  getDevicePreset(devicePreset, deviceCatalog);
+  return {
+    preset: devicePreset,
+    deviceName,
+    logicalSize,
+    deviceProfile,
+    devices: enabledDevices.map((id) => {
+      const device = getDevicePreset(id, deviceCatalog);
+      return {id: device.id, label: device.label, frame: device.frame ?? null};
+    }),
+  };
 }
 
 function parseJpegs(stream) {
@@ -244,7 +276,8 @@ function screenshot() {
 }
 
 async function switchDevice(preset) {
-  if (!['iphone15', 'latest'].includes(preset)) throw new Error('Unsupported device preset.');
+  if (typeof preset !== 'string' || !enabledDevices.includes(preset)) throw new Error('Unsupported or disabled simulator preset.');
+  getDevicePreset(preset, deviceCatalog);
   const previousUdid = udid;
   streamProcess?.kill('SIGTERM');
   streamProcess = null;
@@ -259,11 +292,20 @@ async function switchDevice(preset) {
   if (!output.udid || !output.name) throw new Error('Simulator selection returned incomplete data.');
   udid = output.udid;
   deviceName = output.name;
+  const probed = spawnSync(process.execPath, [path.join(here, 'probe-device.mjs')], {
+    encoding: 'utf8',
+    env: {...process.env, DEVICE_PRESET: preset, SIMULATOR_UDID: udid, SIMULATOR_NAME: deviceName},
+    maxBuffer: 4 * 1024 * 1024,
+  });
+  if (probed.status !== 0) throw new Error((probed.stderr || probed.error?.message || 'Could not inspect the selected simulator display.').trim());
+  if (probed.stdout.trim()) log(probed.stdout.trim());
+  deviceProfile = await readDeviceProfile(preset, udid);
   await exec('xcrun', ['simctl', 'install', udid, appPath]);
   await exec('xcrun', ['simctl', 'launch', udid, bundleId]);
   await exec('idb', ['connect', udid]);
   await runIdb(['launch', '--foreground-if-running', bundleId]);
   logicalSize = await getLogicalSize(udid);
+  devicePreset = preset;
   provider = 'idb-video-stream-mjpeg';
   latestFrame = null;
   frameCount = 0;
@@ -271,7 +313,7 @@ async function switchDevice(preset) {
   startStream();
   if (previousUdid !== udid) await exec('xcrun', ['simctl', 'shutdown', previousUdid]).catch(() => '');
   log(`Changed simulator to ${deviceName} (${logicalSize.width}×${logicalSize.height}).`);
-  return {deviceName, logicalSize};
+  return currentDevicePayload();
 }
 
 const httpServer = createServer((_request, response) => {
@@ -311,7 +353,7 @@ websocketServer.on('connection', (ws) => {
       activeViewer = ws;
       lastHeartbeatAt = Date.now();
       lastInteractionAt = Date.now();
-      sendJson(ws, {type: 'ready', deviceName, logicalSize, provider, fps});
+      sendJson(ws, {type: 'ready', ...currentDevicePayload(), provider, fps});
       sendJson(ws, {type: 'logs', lines: recentLogs.slice(-150)});
       if (latestFrame) ws.send(latestFrame, {binary: true});
       log(`Viewer connected; device=${deviceName}.`);
@@ -326,7 +368,7 @@ websocketServer.on('connection', (ws) => {
       if (!insideUnit(x) || !insideUnit(y)) { sendJson(ws, {type: 'error', message: 'Tap is outside the simulator screen.'}); return; }
       await runAction(ws, 'tap', async () => {
         const began = Date.now();
-        await runIdb(['ui', 'tap', String(Math.round(x * logicalSize.width)), String(Math.round(y * logicalSize.height))]);
+        await runIdb(['ui', 'tap', String(normalizedToScreenPoint(x, logicalSize.width)), String(normalizedToScreenPoint(y, logicalSize.height))]);
         const commandMs = Date.now() - began;
         const afterCommandCount = frameCount;
         const newFrame = await nextFrameAfter(afterCommandCount);
@@ -338,7 +380,7 @@ websocketServer.on('connection', (ws) => {
       const values = [message.x1, message.y1, message.x2, message.y2].map(Number);
       if (values.some((value) => !insideUnit(value))) { sendJson(ws, {type: 'error', message: 'Swipe point is outside the simulator screen.'}); return; }
       await runAction(ws, 'swipe', async () => {
-        await runIdb(['ui', 'swipe', String(Math.round(values[0] * logicalSize.width)), String(Math.round(values[1] * logicalSize.height)), String(Math.round(values[2] * logicalSize.width)), String(Math.round(values[3] * logicalSize.height))]);
+        await runIdb(['ui', 'swipe', String(normalizedToScreenPoint(values[0], logicalSize.width)), String(normalizedToScreenPoint(values[1], logicalSize.height)), String(normalizedToScreenPoint(values[2], logicalSize.width)), String(normalizedToScreenPoint(values[3], logicalSize.height))]);
         sendJson(ws, {type: 'action-result', action: 'swipe', ok: true});
         lastInteractionAt = Date.now();
       });
@@ -355,7 +397,7 @@ websocketServer.on('connection', (ws) => {
         orientation = orientation === 'PORTRAIT' ? 'LANDSCAPE_LEFT' : 'PORTRAIT';
       await runIdb(['rotation', orientation]);
       logicalSize = await getLogicalSize(udid);
-      sendJson(ws, {type: 'ready', deviceName, logicalSize, provider, fps});
+      sendJson(ws, {type: 'ready', ...currentDevicePayload(), provider, fps});
         lastInteractionAt = Date.now();
         sendJson(ws, {type: 'action-result', action: 'rotate', ok: true, orientation});
       });
@@ -395,7 +437,7 @@ websocketServer.on('connection', (ws) => {
         sendJson(ws, {type: 'action-result', action: 'reload', ok: true});
       });
     } else if (message.type === 'device') {
-      if (!['iphone15', 'latest'].includes(message.preset)) { sendJson(ws, {type: 'error', message: 'Unknown simulator preset.'}); return; }
+      if (typeof message.preset !== 'string' || !enabledDevices.includes(message.preset)) { sendJson(ws, {type: 'error', message: 'Unknown or disabled simulator preset.'}); return; }
       await runAction(ws, 'device', async () => {
         sendJson(ws, {type: 'device-loading', preset: message.preset});
         const device = await switchDevice(message.preset);
@@ -441,6 +483,9 @@ function broadcastStatus() {
     lastFrameAt,
     deviceName,
     logicalSize,
+    preset: devicePreset,
+    deviceProfile,
+    devices: currentDevicePayload().devices,
     provider,
     remainingMs: Math.max(0, maxSessionMs - (now - startedAt)),
   };

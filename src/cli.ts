@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import {
   CONFIG_FILE,
   DEFAULT_CONFIG,
+  DEVICE_CATALOG,
   configPath,
   readConfig,
   serializeConfig,
@@ -77,7 +78,7 @@ program
 program
   .command('start')
   .description('Upload a filtered project snapshot and open the live simulator in GitHub Pages.')
-  .option('--device <preset>', 'Choose iphone15 or latest')
+  .option('--device <model>', `Choose a configured simulator (${DEVICE_CATALOG.devices.map((device: { id: string }) => device.id).join(', ')})`)
   .option('--verbose', 'Show detailed workflow progress')
   .option('--include-env', 'Include .env files after an explicit warning')
   .action(async (options: { device?: string; verbose?: boolean; includeEnv?: boolean }) => {
@@ -137,8 +138,7 @@ async function startSession(options: { device?: string; verbose?: boolean; inclu
   const configFile = configPath(cwd);
   if (!fs.existsSync(configFile)) throw new Error(`No ${CONFIG_FILE} found. Run 'ui-ios init' once in this project.`);
   let config = readConfig(cwd);
-  const device = normalizeDevice(options.device ?? config.defaultDevice);
-  if (options.device && options.device !== device) throw new Error('Device must be "iphone15" or "latest".');
+  const device = normalizeDevice(options.device ?? config.defaultDevice, config.devices);
 
   if (!config.warningAcknowledged) {
     console.log(chalk.yellow('GitHub Actions is a CI service, not a persistent remote desktop. This personal preview runs a macOS job for up to 5h30; private-repository macOS minutes are billed at 10× the standard rate and may exceed your included quota.'));
@@ -538,9 +538,12 @@ function summarizeProgress(run: GitHubRun, queuedAt: number): { label: string; m
   return { label: `${run.status}:${finished}`, message: `Runner: ${run.status}; ${finished} steps completed.` };
 }
 
-function normalizeDevice(value: string): DevicePreset {
-  if (value === 'iphone15' || value === 'latest') return value;
-  throw new Error('Device must be "iphone15" or "latest".');
+function normalizeDevice(value: string, allowed: DevicePreset[]): DevicePreset {
+  const normalized = value === 'latest' ? 'iphone17' : value;
+  if (!allowed.includes(normalized)) {
+    throw new Error(`Device "${value}" is not enabled in ${CONFIG_FILE}. Enabled devices: ${allowed.join(', ')}.`);
+  }
+  return normalized;
 }
 
 function formatBytes(bytes: number): string {
