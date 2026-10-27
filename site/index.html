@@ -20,6 +20,7 @@
     .device-bezel{position:absolute;inset:0;display:none;width:100%;height:100%;object-fit:contain;pointer-events:none}
     @media(max-width:800px){.device-stage{width:min(86vw,370px)}}
     @media(max-width:440px){.device-stage{width:min(90vw,370px)}}
+    .notice-command{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:12px}.notice-command code{min-width:0;padding:8px 10px;border:1px solid #ffffff12;border-radius:8px;background:#1b0d14;color:#ffe8ed;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.notice-command button{margin:0;white-space:nowrap}.notice-copy-status{grid-column:1/-1;color:#ffc8d1;font-size:12px}.screen-hint.ended{background:radial-gradient(ellipse at 50% 45%,#17233a,#080b12 68%)}.screen-hint.ended strong{font-size:18px}.screen-hint.ended .end-mark{display:grid;place-items:center;width:44px;height:44px;margin:0 auto 14px;border:1px solid #ff6e8244;border-radius:14px;background:#ff6e8212;color:#ff9aaa;font-size:22px}
   </style>
 </head>
 <body>
@@ -32,21 +33,21 @@
     <main class="layout">
       <section class="device-column" aria-label="iPhone Simulator">
         <div class="device-top">
-          <div class="select-wrap"><label for="device">Simulator</label><select id="device" aria-label="Simulator model"><option value="">Waiting for session</option></select></div>
+          <div class="select-wrap"><label for="device">Simulator</label><select id="device" aria-label="Simulator model" disabled><option value="">Waiting for session</option></select></div>
           <div class="pill"><span id="deviceName">Waiting for simulator…</span></div>
         </div>
         <div id="deviceStage" class="device-stage"><div id="screen" class="screen" aria-label="Simulator screen">
-          <img id="frame" alt="Live iPhone Simulator screen"><div id="screenHint" class="screen-hint"><div><div class="spinner"></div><strong>Waiting for the first frame</strong>Keep this tab open while the runner starts.</div></div>
+          <img id="frame" alt="Live iPhone Simulator screen"><div id="screenHint" class="screen-hint" aria-live="polite"><div><div class="spinner"></div><strong>Waiting for the first frame</strong>Keep this tab open while the runner starts.</div></div>
         </div><img id="deviceBezel" class="device-bezel" alt="" aria-hidden="true"></div>
         <div class="below">
-          <button data-action="home" title="Home button">⌂ Home</button><button data-action="lock" title="Lock the simulator">⏻ Lock</button><button data-action="rotate" title="Rotate the simulator">⟳ Rotate</button><button data-action="screenshot" title="Save a screenshot">▣ Screenshot</button><button data-action="reload" title="Restart the app">↻ Relaunch</button><button data-action="shake" title="Shake the simulator">〰 Shake</button>
+          <button data-action="home" title="Home button" disabled>⌂ Home</button><button data-action="lock" title="Lock the simulator" disabled>⏻ Lock</button><button data-action="rotate" title="Rotate the simulator" disabled>⟳ Rotate</button><button data-action="screenshot" title="Save a screenshot" disabled>▣ Screenshot</button><button data-action="reload" title="Restart the app" disabled>↻ Relaunch</button><button data-action="shake" title="Shake the simulator" disabled>〰 Shake</button>
         </div>
       </section>
       <aside class="side">
         <p id="displayDetails" class="details" aria-live="polite">Waiting for runtime display measurements.</p>
         <div class="section"><h2>Session</h2><div class="metrics"><div class="metric"><span>Frame rate</span><strong id="fps">— fps</strong></div><div class="metric"><span>Last action</span><strong id="latency">—</strong></div><div class="metric"><span>Time remaining</span><strong id="remaining">—</strong></div><div class="metric"><span>Screen</span><strong id="dimensions">—</strong></div></div></div>
-        <div class="section"><h2>Simulator controls</h2><div class="actions"><button id="appearance">☾ Dark mode</button><button id="logsToggle">▤ Logs</button><button id="keyboardFocus">⌨ Keyboard</button></div></div>
-        <div class="section keyboard"><input id="keyboardText" maxlength="500" autocomplete="off" placeholder="Type into the app…"><button id="sendText">Send</button></div>
+        <div class="section"><h2>Simulator controls</h2><div class="actions"><button id="appearance" disabled>☾ Dark mode</button><button id="logsToggle">▤ Logs</button><button id="keyboardFocus" disabled>⌨ Keyboard</button></div></div>
+        <div class="section keyboard"><input id="keyboardText" maxlength="500" autocomplete="off" placeholder="Type into the app…" disabled><button id="sendText" disabled>Send</button></div>
         <div class="section"><div id="logs" class="logs" aria-live="polite"></div></div>
         <p class="note">The simulator runs in a temporary GitHub macOS job. Camera, push notifications, and other hardware-only features are unavailable.</p>
       </aside>
@@ -59,6 +60,7 @@
       const token = params.get('t') || '';
       const host = params.get('s') || '';
       const sessionId = params.get('id') || '';
+      const START_COMMAND = 'npx --yes --ignore-scripts --allow-git=all "github:kerolosmohsen/ui-ios#main" start';
       const $ = (id) => document.getElementById(id);
       const notice = $('notice');
       const dot = $('statusDot');
@@ -77,21 +79,101 @@
       let pointer = null;
       let closed = false;
 
+      function setInteractive(enabled) {
+        for (const element of document.querySelectorAll('[data-action], #device, #appearance, #keyboardFocus, #keyboardText, #sendText')) {
+          element.disabled = !enabled;
+        }
+        screen.style.pointerEvents = enabled ? 'auto' : 'none';
+      }
+      function setScreenState(title, description, {ended = false, loading = false} = {}) {
+        hint.replaceChildren();
+        hint.classList.toggle('ended', ended);
+        const content = document.createElement('div');
+        if (ended) {
+          const mark = document.createElement('div');
+          mark.className = 'end-mark';
+          mark.textContent = '!';
+          content.append(mark);
+        } else if (loading) {
+          const spinner = document.createElement('div');
+          spinner.className = 'spinner';
+          content.append(spinner);
+        }
+        const heading = document.createElement('strong');
+        heading.textContent = title;
+        const detail = document.createElement('span');
+        detail.textContent = description;
+        content.append(heading, detail);
+        hint.append(content);
+        hint.hidden = false;
+      }
+      async function copyStartCommand(button, status) {
+        let copied = false;
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+          await navigator.clipboard.writeText(START_COMMAND);
+          copied = true;
+        } catch {
+          const field = document.createElement('textarea');
+          field.value = START_COMMAND;
+          field.style.position = 'fixed';
+          field.style.opacity = '0';
+          try {
+            document.body.append(field);
+            field.select();
+            copied = document.execCommand('copy');
+          } catch {
+            copied = false;
+          } finally {
+            field.remove();
+          }
+        }
+        button.textContent = copied ? 'Copied' : 'Select command';
+        status.textContent = copied
+          ? 'Paste it into the terminal opened in your React Native project.'
+          : 'Copy the command above and paste it into your project terminal.';
+      }
       function showNotice(message, expired = false) {
         notice.replaceChildren(document.createTextNode(message));
         if (expired) {
           const line = document.createElement('div');
+          line.className = 'notice-command';
+          const code = document.createElement('code');
+          code.textContent = START_COMMAND;
           const button = document.createElement('button');
-          button.textContent = 'Start a new session';
-          button.addEventListener('click', () => { notice.textContent = 'Run `ui-ios start` again from your React Native project.'; });
-          line.append(button);
+          button.textContent = 'Copy command';
+          const status = document.createElement('span');
+          status.className = 'notice-copy-status';
+          button.addEventListener('click', () => { void copyStartCommand(button, status); });
+          line.append(code, button, status);
           notice.append(line);
         }
         notice.classList.add('show');
       }
       function setConnection(state, text) { dot.className = `dot ${state}`; connection.textContent = text; }
+      function setSessionEnded(message, status = 'Session ended') {
+        closed = true;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (heartbeat) clearInterval(heartbeat);
+        if (socket && socket.readyState !== WebSocket.CLOSED) socket.close(1000, 'Session ended');
+        setInteractive(false);
+        setConnection('offline', status);
+        $('deviceName').textContent = status;
+        $('fps').textContent = '\u2014 fps';
+        $('latency').textContent = '\u2014';
+        $('remaining').textContent = '\u2014';
+        $('dimensions').textContent = '\u2014';
+        $('displayDetails').textContent = 'No active simulator data.';
+        const previous = frame.dataset.url;
+        frame.removeAttribute('src');
+        delete frame.dataset.url;
+        if (previous) URL.revokeObjectURL(previous);
+        setScreenState(status, 'Start a new session from your React Native project terminal.', {ended: true});
+        showNotice(message, true);
+      }
       function send(message) {
-        if (!socket || socket.readyState !== WebSocket.OPEN) { showNotice('The simulator is reconnecting. Try again in a moment.'); return; }
+        if (closed) { showNotice('This session has ended. Start a new session from your project terminal.', true); return; }
+        if (!socket || socket.readyState !== WebSocket.OPEN) { showNotice('The connection is interrupted. Controls will work again after it reconnects.'); return; }
         socket.send(JSON.stringify(message));
       }
       function appendLog(line) {
@@ -194,7 +276,10 @@
           if (message.type === 'ready') {
             disconnectedAt = 0;
             setConnection('online', 'Connected');
+            setInteractive(true);
             updateDeviceDisplay(message);
+            notice.classList.remove('show');
+            notice.replaceChildren();
             if (message.fps) $('fps').textContent = `${message.fps} fps`;
             if (heartbeat) clearInterval(heartbeat);
             heartbeat = setInterval(() => send({type: 'heartbeat'}), 30000);
@@ -205,9 +290,9 @@
             $('remaining').textContent = formatTime(message.remainingMs);
             if (message.provider) $('fps').title = `Stream: ${message.provider}`;
           } else if (message.type === 'device-loading') {
-            hint.hidden = false;
-            hint.innerHTML = '<div><div class="spinner"></div><strong>Changing simulator…</strong>Booting the selected device and reinstalling the app.</div>';
-            setConnection('wait', 'Changing simulator…');
+            setInteractive(false);
+            setScreenState('Changing simulator...', 'Booting the selected device and reinstalling the app.', {loading: true});
+            setConnection('wait', 'Changing simulator...');
           } else if (message.type === 'logs') {
             (message.lines || []).forEach(appendLog);
           } else if (message.type === 'log' || message.type === 'app-log') {
@@ -221,26 +306,30 @@
             link.download = message.filename || 'simulator-screenshot.png';
             link.click();
           } else if (message.type === 'error') {
-            showNotice(message.message || 'The session link is invalid. Start a new session.', true);
+            setSessionEnded(message.message || 'This session link is invalid or expired. Start a new session.');
           }
         };
-        socket.onerror = () => setConnection('wait', 'Connection interrupted…');
+        socket.onerror = () => {
+          setConnection('wait', 'Connection interrupted...');
+          setInteractive(false);
+          showNotice('The connection to the simulator was interrupted. Reconnecting automatically...');
+        };
         socket.onclose = (event) => {
+          if (closed) return;
           if (heartbeat) clearInterval(heartbeat);
           if ([1008, 1007].includes(event.code)) {
-            closed = true;
-            setConnection('offline', 'Session expired');
-            showNotice(event.reason || 'This session link has expired. Start the command again in your React Native project.', true);
+            setSessionEnded('This session link has expired or the runner has stopped. Start a new session from your project terminal.', 'Session expired');
             return;
           }
           if (!disconnectedAt) disconnectedAt = Date.now();
           if (Date.now() - disconnectedAt >= 240000) {
-            closed = true;
-            setConnection('offline', 'Session ended');
-            showNotice('This simulator session has ended or its tunnel expired. Run `ui-ios start` again in your React Native project.', true);
+            setSessionEnded('This simulator session has ended or its tunnel expired. Start a new session from your project terminal.');
             return;
           }
-          setConnection('wait', 'Connection lost · retrying…');
+          setConnection('wait', 'Connection lost - retrying...');
+          setInteractive(false);
+          setScreenState('Connection lost', 'Trying to reconnect to the simulator...', {loading: true});
+          showNotice('The connection to the simulator was interrupted. Reconnecting automatically...');
           scheduleReconnect();
         };
       }
@@ -280,9 +369,7 @@
       $('keyboardText').addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); $('sendText').click(); } });
 
       if (!token || !/^[a-f0-9]{64}$/i.test(token) || !/^[a-z0-9-]+\.trycloudflare\.com$/i.test(host) || !sessionId) {
-        closed = true;
-        setConnection('offline', 'No active session');
-        showNotice('This session link is incomplete or expired. Run `ui-ios start` again in your React Native project.', true);
+        setSessionEnded('This session link is incomplete or expired. Start a new session from your project terminal.', 'No active session');
       } else {
         connect();
       }
