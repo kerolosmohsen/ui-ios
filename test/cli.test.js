@@ -110,6 +110,11 @@ test('init writes configuration, adds ignore paths, and preserves them on later 
     assert.equal(generatedConfig.configurations['ios.sim.debug'].app, 'ios.sim.debug');
     const workflow = fs.readFileSync(path.join(cwd, '.github', 'workflows', 'ios-ui-tests.yml'), 'utf8');
     assert.match(workflow, /node-version: '24'/);
+    assert.match(workflow, /Generate native iOS project for Expo/);
+    assert.match(workflow, /npx expo prebuild --platform ios --no-install/);
+    const sessionWorkflow = fs.readFileSync(path.join(__dirname, '../templates/session/.github/workflows/ui-ios-session.yml'), 'utf8');
+    assert.match(sessionWorkflow, /Generate native iOS project for Expo/);
+    assert.match(sessionWorkflow, /npx expo prebuild --platform ios --no-install/);
     assert.match(workflow, /bundle exec pod install/);
     assert.match(workflow, /brew install wix\/brew\/applesimutils/);
     assert.match(workflow, /actions\/checkout@v7/);

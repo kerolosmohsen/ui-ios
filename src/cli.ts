@@ -71,7 +71,7 @@ program
     await fsp.writeFile(filePath, serializeConfig(DEFAULT_CONFIG), 'utf8');
     console.log(`Created ${chalk.cyan(CONFIG_FILE)}. Review its device, idle timeout, and exclusion settings before running a session.`);
     if (project.isExpo && !project.hasIosDir) {
-      console.log(chalk.yellow('This Expo project needs native iOS files. Run `npx expo prebuild --platform ios` after reviewing native module support.'));
+      console.log(chalk.blue('This Expo project has no ios/ directory. The macOS session runner will generate the iOS project from the Expo config.'));
     }
   });
 
@@ -113,26 +113,14 @@ process.once('SIGINT', () => {
 
 async function startSession(options: { device?: string; verbose?: boolean; includeEnv?: boolean }): Promise<void> {
   const cwd = process.cwd();
-  let project = detectReactNativeProject(cwd);
+  const project = detectReactNativeProject(cwd);
   if (!project.valid) throw new Error(project.reason ?? 'This is not a React Native project.');
 
   if (!project.hasIosDir) {
     if (!project.isExpo) {
       throw new Error('No ios/ directory was found. This React Native project needs an iOS native project before a simulator build.');
     }
-    if (!process.stdin.isTTY) {
-      throw new Error('This Expo project has no ios/ directory. Review native module support, then run `npx expo prebuild --platform ios` manually.');
-    }
-    const answer = await inquirer.prompt([{
-      type: 'confirm',
-      name: 'prebuild',
-      default: false,
-      message: 'This Expo project has no ios/ directory. Run `npx expo prebuild --platform ios` now?',
-    }]);
-    if (!answer.prebuild) throw new Error('Run `npx expo prebuild --platform ios` when you are ready, then retry.');
-    runInherited('npx', ['expo', 'prebuild', '--platform', 'ios'], cwd);
-    project = detectReactNativeProject(cwd);
-    if (!project.valid || !project.hasIosDir) throw new Error('Expo prebuild did not produce a usable ios/ project.');
+    console.log(chalk.blue('Expo iOS native files will be generated on the macOS runner; no local prebuild is needed.'));
   }
 
   const configFile = configPath(cwd);
@@ -497,16 +485,6 @@ async function copyTree(source: string, destination: string): Promise<void> {
     if (entry.isDirectory()) await copyTree(from, to);
     else if (entry.isFile()) await fsp.copyFile(from, to);
   }
-}
-
-function runInherited(command: string, args: string[], cwd: string): void {
-  const result = spawnSync(command, args, {
-    cwd,
-    stdio: 'inherit',
-    windowsHide: false,
-    shell: process.platform === 'win32',
-  });
-  if (result.error || result.status !== 0) throw new Error(`${command} failed${result.status === null ? '' : ` (exit code ${result.status})`}.`);
 }
 
 function openBrowser(url: string): void {

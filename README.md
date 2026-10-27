@@ -8,10 +8,10 @@ This is a personal development and testing tool. GitHub Actions is a CI service,
 
 - Node.js 18 or newer and Git on Windows.
 - GitHub CLI (`gh`) authenticated with repository and workflow access.
-- A React Native app with `react-native` in `package.json` and native iOS files in `ios/`.
+- A React Native app with `react-native` in `package.json`. Expo projects can omit `ios/`; the macOS runner generates it from the Expo config.
 - An account that can create a private `ui-ios-sessions` repository and run GitHub Actions.
 
-Expo projects without `ios/` need native files. `ui-ios start` asks before running `npx expo prebuild --platform ios`.
+Expo projects without `ios/` are supported. The session runner runs `npx expo prebuild --platform ios --no-install` on macOS, so Windows does not need to generate or modify native iOS files locally.
 
 ## Quick start
 

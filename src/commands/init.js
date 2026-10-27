@@ -65,31 +65,33 @@ function hasManifestDependency(cwd, packageName) {
   );
 }
 
+function childEnvironment() {
+  const env = { ...process.env };
+  // npm exec/npx exports its one-off flags to child package-manager processes.
+  // Keep them scoped to fetching ui-ios and let the project config set policy.
+  const oneOffNpmFlags = new Set([
+    'npm_config_allow_git',
+    'npm_config_allow_remote',
+    'npm_config_allow_file',
+    'npm_config_allow_directory',
+    'npm_config_allow_scripts',
+    'npm_config_dangerously_allow_all_scripts',
+    'npm_config_ignore_scripts',
+    'npm_config_yes',
+  ]);
+  for (const key of Object.keys(env)) {
+    if (oneOffNpmFlags.has(key.toLowerCase())) delete env[key];
+  }
+  return env;
+}
+
 function runPackageInstall(packageManager, cwd, packages) {
   const [command, args] = packageInstallCommand(packageManager, packages);
-  const env = { ...process.env };
-  if (command === 'npm') {
-    // npx exports its one-off security flags to child processes. Keep those
-    // flags scoped to fetching ui-ios; the project's own npm policy governs
-    // this project-scoped dependency install.
-    const oneOffNpmFlags = new Set([
-      'npm_config_allow_git',
-      'npm_config_allow_remote',
-      'npm_config_allow_file',
-      'npm_config_allow_directory',
-      'npm_config_allow_scripts',
-      'npm_config_dangerously_allow_all_scripts',
-      'npm_config_ignore_scripts',
-    ]);
-    for (const key of Object.keys(env)) {
-      if (oneOffNpmFlags.has(key.toLowerCase())) delete env[key];
-    }
-  }
   const result = spawnSync(command, args, {
     cwd,
     stdio: 'inherit',
     shell: process.platform === 'win32',
-    env,
+    env: childEnvironment(),
   });
 
   if (result.error) throw new Error(`Could not start ${command}: ${result.error.message}`);
@@ -145,11 +147,11 @@ async function runInit(options = {}) {
 
   logger.success(`Found ${chalk.cyan(projectInfo.appName)} (React Native ${projectInfo.rnVersion}).`);
   logger.success(`iOS scheme/project: ${chalk.cyan(projectInfo.projectName)}.`);
-  if (!projectInfo.hasIosDir || !projectInfo.buildProjectFile) {
+  if ((!projectInfo.hasIosDir || !projectInfo.buildProjectFile) && !projectInfo.isExpo) {
     logger.warning('No iOS workspace or Xcode project was found. The generated iOS build will need a native iOS project.');
   }
   if (projectInfo.isExpo && !projectInfo.hasIosDir) {
-    logger.warning('This Expo project has no ios/ directory; generate native iOS files before using this workflow.');
+    logger.info('The generated GitHub workflow will generate the Expo iOS project on its macOS runner.');
   }
 
   logger.step(2, 5, 'Checking existing configuration...');

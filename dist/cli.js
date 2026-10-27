@@ -52,7 +52,7 @@ program
     await promises_1.default.writeFile(filePath, (0, config_1.serializeConfig)(config_1.DEFAULT_CONFIG), 'utf8');
     console.log(`Created ${chalk_1.default.cyan(config_1.CONFIG_FILE)}. Review its device, idle timeout, and exclusion settings before running a session.`);
     if (project.isExpo && !project.hasIosDir) {
-        console.log(chalk_1.default.yellow('This Expo project needs native iOS files. Run `npx expo prebuild --platform ios` after reviewing native module support.'));
+        console.log(chalk_1.default.blue('This Expo project has no ios/ directory. The macOS session runner will generate the iOS project from the Expo config.'));
     }
 });
 program
@@ -90,28 +90,14 @@ process.once('SIGINT', () => {
 });
 async function startSession(options) {
     const cwd = process.cwd();
-    let project = detectReactNativeProject(cwd);
+    const project = detectReactNativeProject(cwd);
     if (!project.valid)
         throw new Error(project.reason ?? 'This is not a React Native project.');
     if (!project.hasIosDir) {
         if (!project.isExpo) {
             throw new Error('No ios/ directory was found. This React Native project needs an iOS native project before a simulator build.');
         }
-        if (!process.stdin.isTTY) {
-            throw new Error('This Expo project has no ios/ directory. Review native module support, then run `npx expo prebuild --platform ios` manually.');
-        }
-        const answer = await inquirer_1.default.prompt([{
-                type: 'confirm',
-                name: 'prebuild',
-                default: false,
-                message: 'This Expo project has no ios/ directory. Run `npx expo prebuild --platform ios` now?',
-            }]);
-        if (!answer.prebuild)
-            throw new Error('Run `npx expo prebuild --platform ios` when you are ready, then retry.');
-        runInherited('npx', ['expo', 'prebuild', '--platform', 'ios'], cwd);
-        project = detectReactNativeProject(cwd);
-        if (!project.valid || !project.hasIosDir)
-            throw new Error('Expo prebuild did not produce a usable ios/ project.');
+        console.log(chalk_1.default.blue('Expo iOS native files will be generated on the macOS runner; no local prebuild is needed.'));
     }
     const configFile = (0, config_1.configPath)(cwd);
     if (!node_fs_1.default.existsSync(configFile))
@@ -469,16 +455,6 @@ async function copyTree(source, destination) {
         else if (entry.isFile())
             await promises_1.default.copyFile(from, to);
     }
-}
-function runInherited(command, args, cwd) {
-    const result = (0, node_child_process_1.spawnSync)(command, args, {
-        cwd,
-        stdio: 'inherit',
-        windowsHide: false,
-        shell: process.platform === 'win32',
-    });
-    if (result.error || result.status !== 0)
-        throw new Error(`${command} failed${result.status === null ? '' : ` (exit code ${result.status})`}.`);
 }
 function openBrowser(url) {
     let command = '';

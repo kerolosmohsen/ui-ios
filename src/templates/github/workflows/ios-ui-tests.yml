@@ -35,6 +35,12 @@ jobs:
             npm install
           fi
 
+      - name: Generate native iOS project for Expo
+        run: |
+          if [[ ! -d ios ]] && node -e 'const p = require("./package.json"); process.exit(p.dependencies?.expo || p.devDependencies?.expo || p.peerDependencies?.expo || p.optionalDependencies?.expo ? 0 : 1)'; then
+            npx expo prebuild --platform ios --no-install
+          fi
+
       - name: Install Ruby dependencies
         if: hashFiles('Gemfile') != ''
         run: bundle install
