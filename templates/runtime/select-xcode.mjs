@@ -14,11 +14,13 @@ catch { /* Use the runner-selected Xcode when the app has no config. */ }
 const active = run('xcodebuild', ['-version']).replace(/\r/g, '').trim();
 if (!version) {
   console.error(`Using runner default ${active.replace(/\n/g, ' · ')}.`);
+  run(process.execPath, ['ui-ios-runtime/prepare-macos.mjs']);
   process.exit(0);
 }
 if (!/^\d+(?:\.\d+)*$/.test(version)) throw new Error('ui-ios.config.json xcodeVersion must contain only a version, such as "26.2".');
 if (new RegExp(`^Xcode ${version.replaceAll('.', '\\.')}($|\\s)`, 'm').test(active)) {
   console.error(`Using configured Xcode ${version}.`);
+  run(process.execPath, ['ui-ios-runtime/prepare-macos.mjs']);
   process.exit(0);
 }
 const apps = await readdir('/Applications');
@@ -28,4 +30,5 @@ if (!candidate) {
   throw new Error(`Xcode ${version} is not installed on this macOS runner (found: ${installed}). Remove xcodeVersion from ui-ios.config.json or choose an installed version.`);
 }
 run('sudo', ['xcode-select', '-s', path.join('/Applications', candidate, 'Contents', 'Developer')]);
+run(process.execPath, ['ui-ios-runtime/prepare-macos.mjs']);
 console.error(`Selected ${run('xcodebuild', ['-version']).replace(/\r/g, '').trim().replace(/\n/g, ' · ')}.`);

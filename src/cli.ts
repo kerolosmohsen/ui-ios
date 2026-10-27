@@ -25,6 +25,8 @@ const { detectReactNativeProject } = require('./utils/detector.js') as {
     reason?: string;
     hasIosDir?: boolean;
     isExpo?: boolean;
+    workspaceName?: string | null;
+    projectFile?: string | null;
     appName?: string;
     rnVersion?: string;
     packageManager?: string;
@@ -113,8 +115,17 @@ process.once('SIGINT', () => {
 
 async function startSession(options: { device?: string; verbose?: boolean; includeEnv?: boolean }): Promise<void> {
   const cwd = process.cwd();
+  const nodeMajor = Number(process.versions.node.split('.')[0]);
+  if (nodeMajor < 18) throw new Error(`Node.js ${process.versions.node} is too old. ui-ios requires Node.js 18 or newer.`);
+  const gitCheck = spawnSync('git', ['--version'], { encoding: 'utf8', windowsHide: true });
+  if (gitCheck.status !== 0) throw new Error('Git was not found on PATH. Install Git and reopen the project terminal before starting the preview.');
+
   const project = detectReactNativeProject(cwd);
   if (!project.valid) throw new Error(project.reason ?? 'This is not a React Native project.');
+
+  if (project.hasIosDir && !project.workspaceName && !project.projectFile) {
+    throw new Error('The ios/ directory contains no .xcworkspace or .xcodeproj. Restore the native Xcode project or use an Expo project so ui-ios can generate it on macOS.');
+  }
 
   if (!project.hasIosDir) {
     if (!project.isExpo) {
@@ -129,6 +140,13 @@ async function startSession(options: { device?: string; verbose?: boolean; inclu
   const device = normalizeDevice(options.device ?? config.defaultDevice, config.devices);
   const deviceSpec = DEVICE_CATALOG.devices.find((entry) => entry.id === device);
   if (!deviceSpec) throw new Error(`Unknown simulator device "${device}".`);
+
+  const packageManager = project.packageManager ?? 'npm';
+  const iosPreparation = project.hasIosDir
+    ? 'validate the existing iOS project'
+    : 'generate the Expo iOS project on macOS';
+  console.log(`macOS setup for ${deviceSpec.label}: install ${packageManager} dependencies, ${iosPreparation}, check/install CocoaPods, build the app, then launch the simulator with IDB and a private tunnel.`);
+  console.log('The snapshot excludes .env files by default. If the app needs them, `--include-env` uploads them to your private sessions repository after another warning and confirmation.');
 
   if (!config.warningAcknowledged) {
     console.log(chalk.yellow('GitHub Actions is a CI service, not a persistent remote desktop. This personal preview runs a macOS job for up to 5h30; private-repository macOS minutes are billed at 10× the standard rate and may exceed your included quota.'));

@@ -62,7 +62,13 @@ jobs:
         with:
           node-version: ${{ steps.toolchain.outputs.node_version }}
 
-      - name: Select configured Xcode
+      - name: Set up Bun when the project uses it
+        if: steps.toolchain.outputs.package_manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.toolchain.outputs.bun_version }}
+
+      - name: Select configured Xcode and prepare macOS build tools
         run: node ui-ios-runtime/select-xcode.mjs
 
       - name: Install JavaScript dependencies
@@ -76,15 +82,12 @@ jobs:
             yarn-classic) corepack enable && corepack yarn install --frozen-lockfile ;;
             yarn) corepack enable && corepack yarn install --immutable ;;
             pnpm) corepack enable && corepack pnpm install --frozen-lockfile --allow-build='!detox' --allow-build='!dtrace-provider' ;;
+            bun) bun install --frozen-lockfile ;;
             *) echo "Unsupported package manager: $PACKAGE_MANAGER" >&2; exit 1 ;;
           esac
 
-      - name: Generate native iOS project for Expo
-        run: |
-          set -euo pipefail
-          if [[ ! -d ios ]] && node -e 'const p = require("./package.json"); process.exit(p.dependencies?.expo || p.devDependencies?.expo || p.peerDependencies?.expo || p.optionalDependencies?.expo ? 0 : 1)'; then
-            npx expo prebuild --platform ios --no-install
-          fi
+      - name: Validate app project and generate Expo iOS project if needed
+        run: node ui-ios-runtime/prepare-ios-project.mjs
 
       - name: Install the WebSocket preview server dependency
         run: npm ci --prefix ui-ios-runtime --ignore-scripts --no-audit --no-fund

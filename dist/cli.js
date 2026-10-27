@@ -90,9 +90,18 @@ process.once('SIGINT', () => {
 });
 async function startSession(options) {
     const cwd = process.cwd();
+    const nodeMajor = Number(process.versions.node.split('.')[0]);
+    if (nodeMajor < 18)
+        throw new Error(`Node.js ${process.versions.node} is too old. ui-ios requires Node.js 18 or newer.`);
+    const gitCheck = (0, node_child_process_1.spawnSync)('git', ['--version'], { encoding: 'utf8', windowsHide: true });
+    if (gitCheck.status !== 0)
+        throw new Error('Git was not found on PATH. Install Git and reopen the project terminal before starting the preview.');
     const project = detectReactNativeProject(cwd);
     if (!project.valid)
         throw new Error(project.reason ?? 'This is not a React Native project.');
+    if (project.hasIosDir && !project.workspaceName && !project.projectFile) {
+        throw new Error('The ios/ directory contains no .xcworkspace or .xcodeproj. Restore the native Xcode project or use an Expo project so ui-ios can generate it on macOS.');
+    }
     if (!project.hasIosDir) {
         if (!project.isExpo) {
             throw new Error('No ios/ directory was found. This React Native project needs an iOS native project before a simulator build.');
@@ -107,6 +116,12 @@ async function startSession(options) {
     const deviceSpec = config_1.DEVICE_CATALOG.devices.find((entry) => entry.id === device);
     if (!deviceSpec)
         throw new Error(`Unknown simulator device "${device}".`);
+    const packageManager = project.packageManager ?? 'npm';
+    const iosPreparation = project.hasIosDir
+        ? 'validate the existing iOS project'
+        : 'generate the Expo iOS project on macOS';
+    console.log(`macOS setup for ${deviceSpec.label}: install ${packageManager} dependencies, ${iosPreparation}, check/install CocoaPods, build the app, then launch the simulator with IDB and a private tunnel.`);
+    console.log('The snapshot excludes .env files by default. If the app needs them, `--include-env` uploads them to your private sessions repository after another warning and confirmation.');
     if (!config.warningAcknowledged) {
         console.log(chalk_1.default.yellow('GitHub Actions is a CI service, not a persistent remote desktop. This personal preview runs a macOS job for up to 5h30; private-repository macOS minutes are billed at 10× the standard rate and may exceed your included quota.'));
         console.log(chalk_1.default.yellow('Use it only for personal development and testing. GitHub terms caution against using Actions as a serverless application or creating disproportionate load.'));

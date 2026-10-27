@@ -42,11 +42,13 @@ function detectReactNativeProject(cwd = process.cwd()) {
     const buildProjectType = workspace || hasPodfile ? 'workspace' : project ? 'project' : null;
     const packageManagerField = packageJson.packageManager || '';
     let packageManager = packageManagerField.split('@')[0];
-    if (!['npm', 'yarn', 'pnpm'].includes(packageManager)) {
+    if (!['npm', 'yarn', 'pnpm', 'bun'].includes(packageManager)) {
         if (fs.existsSync(path.join(cwd, 'pnpm-lock.yaml')))
             packageManager = 'pnpm';
         else if (fs.existsSync(path.join(cwd, 'yarn.lock')))
             packageManager = 'yarn';
+        else if (fs.existsSync(path.join(cwd, 'bun.lock')) || fs.existsSync(path.join(cwd, 'bun.lockb')))
+            packageManager = 'bun';
         else
             packageManager = 'npm';
     }

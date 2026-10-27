@@ -23,9 +23,10 @@ if (!/^(?:\d+(?:\.\d+(?:\.\d+)?)?|lts\/[a-z*]+)$/.test(nodeVersion)) nodeVersion
 
 const packageManagerSpec = String(pkg.packageManager ?? '');
 let packageManager = packageManagerSpec.split('@')[0];
-if (!['npm', 'yarn', 'pnpm'].includes(packageManager)) {
+if (!['npm', 'yarn', 'pnpm', 'bun'].includes(packageManager)) {
   if (existsSync('pnpm-lock.yaml')) packageManager = 'pnpm';
   else if (existsSync('yarn.lock')) packageManager = 'yarn';
+  else if (existsSync('bun.lock') || existsSync('bun.lockb')) packageManager = 'bun';
   else packageManager = 'npm';
 }
 if (packageManager === 'npm') packageManager = existsSync('package-lock.json') ? 'npm-ci' : 'npm-install';
@@ -34,6 +35,10 @@ if (packageManager === 'yarn') {
   const lockHeader = existsSync('yarn.lock') ? readFileSync('yarn.lock', 'utf8').slice(0, 200) : '';
   packageManager = version === '1' || lockHeader.includes('yarn lockfile v1') ? 'yarn-classic' : 'yarn';
 }
+if (packageManager === 'bun') packageManager = 'bun';
+const bunVersionFile = existsSync('.bun-version') ? readFileSync('.bun-version', 'utf8').split(/\r?\n/)[0].trim() : '';
+const bunVersion = bunVersionFile || packageManagerSpec.match(/^bun@(.+)$/)?.[1] || 'latest';
 console.error(`Project Node: ${nodeVersion}; package manager: ${packageManager}.`);
 console.log(`node_version=${nodeVersion}`);
 console.log(`package_manager=${packageManager}`);
+if (packageManager === 'bun') console.log(`bun_version=${bunVersion}`);

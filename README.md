@@ -86,7 +86,9 @@ The snapshot always excludes `node_modules/`, `android/`, `ios/Pods/`, `ios/buil
 - The status panel reports the connection, actual device, frame rate, tap response, runtime point and pixel dimensions, status bar, safe area, and remaining time.
 - Taps and swipes are mapped from the displayed screen rectangle into the simulator's runtime point coordinates; the bezel is excluded.
 
-The runner installs JavaScript dependencies and CocoaPods, selects an available Xcode simulator, builds a Debug app with its JavaScript bundle embedded, and starts IDB. The default screen transport is IDB MJPEG; `simctl` screenshots converted to JPEG are the fallback. App logs and screenshots are uploaded as a seven-day Actions artifact when the job ends.
+The macOS runner checks Xcode, Homebrew, Git, CocoaPods, and Bundler before building, and installs CocoaPods or Bundler on that temporary runner if either is missing. It installs JavaScript dependencies using the detected npm, Yarn, pnpm, or Bun package manager and lockfile, validates the iOS project, and generates Expo's native iOS project on macOS when `ios/` is absent. Expo config must enable iOS; otherwise the run stops with a direct fix before Xcode build time is spent. It then installs Pods, selects an available simulator, builds a Debug app with its JavaScript bundle embedded, and starts IDB plus a private tunnel. The default screen transport is IDB MJPEG; `simctl` screenshots converted to JPEG are the fallback. App logs and screenshots are uploaded as a seven-day Actions artifact when the job ends.
+
+Each Actions runner is temporary, so this setup runs on every new session. No local Mac, Xcode, Watchman, or CocoaPods installation is needed on Windows. Before uploading a snapshot, `ui-ios start` checks the local Node.js and Git versions, React Native project structure, GitHub authentication, session repository permissions, and configuration. `.env` files stay excluded by default; when needed, `ui-ios start --include-env` asks for a second confirmation and uploads them to the private sessions repository.
 
 ## Limits
 
