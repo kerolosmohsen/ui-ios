@@ -237,10 +237,12 @@ async function startSession(options) {
                 if (metadata.sessionId === sessionId && metadata.tunnelHost && metadata.tunnelHost !== activeTunnelHost && /^[a-z0-9-]+\.trycloudflare\.com$/i.test(metadata.tunnelHost)) {
                     const pagesUrl = `https://${github.owner}${PAGES_ORIGIN_SUFFIX}/${TOOL_REPOSITORY}/`;
                     const sessionUrl = `${pagesUrl}#t=${token}&s=${metadata.tunnelHost}&id=${encodeURIComponent(sessionId)}`;
+                    const shortSessionId = sessionId.slice(0, 8);
                     if (!ready)
                         console.log(chalk_1.default.green(`Simulator ready: ${metadata.deviceName ?? device}${metadata.logicalSize ? ` (${metadata.logicalSize.width}×${metadata.logicalSize.height})` : ''}${metadata.bootSeconds ? `; boot ${metadata.bootSeconds}s` : ''}.`));
                     else
                         console.log(chalk_1.default.yellow('The temporary tunnel changed; opening a replacement session tab.'));
+                    console.log(`Session ID: ${shortSessionId}. Use the preview tab whose status shows this same ID.`);
                     console.log('Opening the private session link in your browser. The token is in the URL fragment and will not be sent to GitHub Pages.');
                     openBrowser(sessionUrl);
                     ready = true;
@@ -251,7 +253,7 @@ async function startSession(options) {
                 if (ready) {
                     const logs = await github.showRunLogs(repository, runId).catch(() => '');
                     if (/Stopping: no viewer heartbeat for 5 minutes/i.test(logs)) {
-                        console.log(chalk_1.default.yellow('The iOS build succeeded, but the browser did not stay connected (no viewer heartbeat for five minutes). Check that the ui-ios preview tab shows Connected and stays open while the run is active.'));
+                        console.log(chalk_1.default.yellow(`The iOS build succeeded, but no browser connected to session ${sessionId.slice(0, 8)} before its five-minute timeout. Use the newest preview tab and check that its status shows the same session ID; older tabs belong to earlier runs.`));
                     }
                     else {
                         console.log(`Session ended (${run.conclusion ?? 'completed'}). Removing its temporary branch.`);

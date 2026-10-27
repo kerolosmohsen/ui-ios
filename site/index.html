@@ -151,7 +151,10 @@
         }
         notice.classList.add('show');
       }
-      function setConnection(state, text) { dot.className = `dot ${state}`; connection.textContent = text; }
+      function setConnection(state, text) {
+        dot.className = `dot ${state}`;
+        connection.textContent = sessionId ? `${text} · ${sessionId.slice(0, 8)}` : text;
+      }
       function setSessionEnded(message, status = 'Session ended') {
         closed = true;
         if (reconnectTimer) clearTimeout(reconnectTimer);
