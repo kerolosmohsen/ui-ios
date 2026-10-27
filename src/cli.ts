@@ -287,7 +287,12 @@ async function startSession(options: { device?: string; verbose?: boolean; inclu
 
       if (run.status === 'completed') {
         if (ready) {
-          console.log(`Session ended (${run.conclusion ?? 'completed'}). Removing its temporary branch.`);
+          const logs = await github.showRunLogs(repository, runId).catch(() => '');
+          if (/Stopping: no viewer heartbeat for 5 minutes/i.test(logs)) {
+            console.log(chalk.yellow('The iOS build succeeded, but the browser did not stay connected (no viewer heartbeat for five minutes). Check that the ui-ios preview tab shows Connected and stays open while the run is active.'));
+          } else {
+            console.log(`Session ended (${run.conclusion ?? 'completed'}). Removing its temporary branch.`);
+          }
           await cleanupSession(github, state);
           activeSession = null;
           cancelOnSigint = null;
@@ -506,22 +511,39 @@ async function copyTree(source: string, destination: string): Promise<void> {
 }
 
 function openBrowser(url: string): void {
-  let command = '';
-  let args: string[] = [];
   if (process.platform === 'win32') {
-    command = 'cmd.exe';
-    args = ['/d', '/s', '/c', `start "" "${url}"`];
-  } else if (process.platform === 'darwin') {
-    command = 'open';
-    args = [url];
-  } else {
-    command = 'xdg-open';
-    args = [url];
+    launchWindowsUrl(url, false);
+    return;
   }
+
+  const command = process.platform === 'darwin' ? 'open' : 'xdg-open';
+  const args = [url];
   const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
   child.once('error', () => {
-    console.error('Could not open the browser automatically. Check `ui-ios status`, then stop or restart the session from the project terminal.');
+    console.error('Could not open the private preview automatically. Open a browser while the session is running; the private link is not printed.');
   });
+  child.once('close', (code) => {
+    if (code !== 0) console.error('The browser launcher returned an error. Open your default browser while the session is running; the private link is not printed.');
+  });
+  child.unref();
+}
+
+function launchWindowsUrl(url: string, useCmdFallback: boolean): void {
+  const command = useCmdFallback ? 'cmd.exe' : 'explorer.exe';
+  const args = useCmdFallback ? ['/d', '/s', '/c', `start "" "${url}"`] : [url];
+  let fallbackStarted = false;
+  const reportFailure = (): void => {
+    if (fallbackStarted) return;
+    fallbackStarted = true;
+    if (!useCmdFallback) {
+      launchWindowsUrl(url, true);
+      return;
+    }
+    console.error('Windows could not open the private preview link. Check your default browser and start ui-ios again; the link is not printed because it contains a session token.');
+  };
+  const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
+  child.once('error', reportFailure);
+  child.once('close', (code) => { if (code !== 0) reportFailure(); });
   child.unref();
 }
 
