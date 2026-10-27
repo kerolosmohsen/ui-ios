@@ -11,6 +11,7 @@ const vm = require('node:vm');
 const { detectReactNativeProject } = require('../src/utils/detector');
 const { generateDetoxConfig } = require('../src/templates/detoxrc');
 const { DEFAULT_CONFIG, DEVICE_CATALOG, DEVICE_IDS, readConfig, serializeConfig, validateConfig } = require('../dist/session/config');
+const { GitHubClient } = require('../dist/session/github');
 const { createProjectSnapshot, SnapshotTooLargeError } = require('../dist/session/snapshot');
 
 function createProject({ workspace = true, project = true, podfile = false } = {}) {
@@ -161,6 +162,32 @@ test('validates session settings and refuses unsupported device choices', () => 
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
   }
+});
+
+test('requests run-list and run-view JSON fields supported by the GitHub CLI', async () => {
+  const client = Object.create(GitHubClient.prototype);
+  const calls = [];
+  client.runGh = async (args) => {
+    calls.push(args);
+    if (args[1] === 'list') return { stdout: '[]', stderr: '' };
+    return {
+      stdout: JSON.stringify({
+        databaseId: 12,
+        status: 'in_progress',
+        conclusion: null,
+        createdAt: '2026-10-27T00:00:00Z',
+        startedAt: '2026-10-27T00:01:00Z',
+        url: 'https://github.com/owner/repo/actions/runs/12',
+        jobs: [],
+      }),
+      stderr: '',
+    };
+  };
+
+  assert.deepEqual(await client.getActiveRuns('owner/repo'), []);
+  await client.getRun('owner/repo', 12);
+  assert.ok(!calls[0][7].split(',').includes('jobs'));
+  assert.ok(calls[1][6].split(',').includes('jobs'));
 });
 
 test('copies a filtered snapshot from a Windows-style project path without leaking ignored files', async () => {

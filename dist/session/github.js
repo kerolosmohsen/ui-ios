@@ -126,7 +126,7 @@ class GitHubClient {
         const result = await this.runGh([
             'run', 'list', '--repo', repository,
             '--workflow', 'ui-ios-session.yml',
-            '--json', 'databaseId,status,conclusion,url,createdAt,startedAt,jobs',
+            '--json', 'databaseId,status,conclusion,url,createdAt,startedAt',
             '--limit', '20',
         ]);
         const runs = JSON.parse(result.stdout);
@@ -154,7 +154,7 @@ class GitHubClient {
         const result = await this.runGh([
             'run', 'view', String(runId),
             '--repo', repository,
-            '--json', 'databaseId,status,conclusion,createdAt,startedAt,url',
+            '--json', 'databaseId,status,conclusion,createdAt,startedAt,url,jobs',
         ]);
         const run = JSON.parse(result.stdout);
         return run;
