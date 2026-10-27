@@ -39,6 +39,11 @@ final class ProbeSceneDelegate: UIResponder, UIWindowSceneDelegate {
 final class ProbeViewController: UIViewController {
     override var prefersStatusBarHidden: Bool { false }
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor(red: 0.05, green: 0.72, blue: 0.48, alpha: 1)
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         DispatchQueue.main.async {
@@ -49,12 +54,10 @@ final class ProbeViewController: UIViewController {
             }
             let screen = window.screen
             let bounds = screen.bounds
-            let nativeBounds = screen.nativeBounds
             let safeArea = window.safeAreaInsets
             let statusBarHeight = scene.statusBarManager?.statusBarFrame.height ?? 0
             let profile: [String: Any] = [
                 "points": ["width": bounds.width, "height": bounds.height],
-                "nativePixels": ["width": nativeBounds.width, "height": nativeBounds.height],
                 "scale": screen.nativeScale,
                 "safeAreaInsetsPoints": ["top": safeArea.top, "bottom": safeArea.bottom],
                 "statusBarHeightPoints": statusBarHeight

@@ -94,10 +94,6 @@ try {
     simulatorUdid: udid,
     points,
     pixels,
-    nativePixels: {
-      width: rounded(probe.nativePixels.width),
-      height: rounded(probe.nativePixels.height),
-    },
     scale: rounded(probe.scale),
     safeAreaInsetsPoints: {
       top: rounded(probe.safeAreaInsetsPoints.top),
@@ -115,10 +111,6 @@ try {
   if (Math.abs(points.width * profile.scale - pixels.width) > 1 || Math.abs(points.height * profile.scale - pixels.height) > 1) {
     warnings.push(`Point dimensions multiplied by native scale do not match the simulator screenshot pixels (${pixels.width}x${pixels.height}).`);
   }
-  if (profile.nativePixels.width !== pixels.width || profile.nativePixels.height !== pixels.height) {
-    warnings.push(`UIKit native screen dimensions ${profile.nativePixels.width}x${profile.nativePixels.height} differ from screenshot dimensions ${pixels.width}x${pixels.height}.`);
-  }
-
   for (const warning of warnings) console.warn(`WARNING: ${warning}; using runtime dimensions and insets.`);
   const strictFailures = strictDeviceProfileFailures(expected, profile);
   await writeFile(profilePath, `${JSON.stringify(profile, null, 2)}\n`, 'utf8');
