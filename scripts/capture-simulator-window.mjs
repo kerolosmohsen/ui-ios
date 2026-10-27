@@ -36,6 +36,7 @@ try {
   const developerDir = run('xcode-select', ['-p']).trim();
   const appCandidates = [
     path.join(developerDir, 'Applications', 'Simulator.app'),
+    path.resolve(developerDir, '..', 'Applications', 'DeviceHub.app'),
     path.join(developerDir, 'Applications', 'DeviceHub.app'),
   ];
   const simulatorApp = appCandidates.find((candidate) => existsSync(candidate));
