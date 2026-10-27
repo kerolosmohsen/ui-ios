@@ -33,6 +33,7 @@ jobs:
           xcodebuild -version
           xcrun simctl list devices available
           xcrun simctl list devicetypes
+          swiftc -help | grep -F -- '-parse-as-library'
 
       - name: Install IDB for point-space coordinate verification
         run: |

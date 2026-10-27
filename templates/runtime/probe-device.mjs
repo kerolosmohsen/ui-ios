@@ -61,6 +61,7 @@ try {
   run('swiftc', [
     '-sdk', sdkPath,
     '-target', `${targetArchitecture}-apple-ios17.0-simulator`,
+    '-parse-as-library',
     '-module-name', 'UIOSScreenProbe',
     '-framework', 'UIKit',
     '-o', executable,
