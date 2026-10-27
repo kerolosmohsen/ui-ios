@@ -7,13 +7,20 @@
   <meta name="theme-color" content="#080b12">
   <title>ui-ios · iPhone Simulator</title>
   <style>
-    :root{color-scheme:dark;--bg:#080b12;--panel:#111725;--panel2:#182234;--text:#f3f6fc;--muted:#9aa8bd;--line:#27344a;--accent:#79a9ff;--good:#5de0a2;--bad:#ff6e82;--screen-ratio:402/874}
+    :root{color-scheme:dark;--bg:#080b12;--panel:#111725;--panel2:#182234;--text:#f3f6fc;--muted:#9aa8bd;--line:#27344a;--accent:#79a9ff;--good:#5de0a2;--bad:#ff6e82;--screen-ratio:393/852}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#203457 0,#0b1220 40%,var(--bg) 75%);color:var(--text);font:14px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
     button,input,select{font:inherit;color:inherit}button{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:9px 12px;cursor:pointer;transition:.15s}button:hover{border-color:#5676a8;background:#22314a}button:disabled{opacity:.45;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .shell{max-width:1280px;margin:auto;padding:20px 24px 32px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:5px 0 20px;border-bottom:1px solid #ffffff15}.brand{display:flex;align-items:center;gap:12px}.mark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#75aaff,#835fff);font-size:22px;box-shadow:0 8px 28px #506bd545}.brand h1{font-size:18px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#111725aa;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#657187}.dot.online{background:var(--good);box-shadow:0 0 12px #5de0a288}.dot.wait{background:#ffc46a;box-shadow:0 0 12px #ffc46a88}.dot.offline{background:var(--bad)}
-    .layout{display:grid;grid-template-columns:minmax(330px,1fr) minmax(270px,380px);gap:24px;align-items:start;padding-top:22px}.device-column{display:flex;flex-direction:column;align-items:center;min-width:0}.device-top{width:min(100%,720px);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.device-top label{color:var(--muted);font-size:12px}.select-wrap{display:flex;align-items:center;gap:9px}select,input{background:#141d2c;border:1px solid var(--line);border-radius:9px;padding:9px 11px}select{min-width:132px}.phone{width:min(100%,370px);padding:10px;border-radius:48px;background:linear-gradient(145deg,#30394b,#080b11 24%,#171d2a 70%,#374257);box-shadow:0 28px 80px #0009,inset 0 1px 2px #ffffff65;position:relative}.phone:before{content:"";position:absolute;left:-3px;top:114px;width:3px;height:35px;border-radius:3px 0 0 3px;background:#596276}.phone:after{content:"";position:absolute;right:-3px;top:145px;width:3px;height:60px;border-radius:0 3px 3px 0;background:#596276}.screen{position:relative;overflow:hidden;border-radius:39px;background:#000;aspect-ratio:var(--screen-ratio);touch-action:none;user-select:none}.screen img{display:block;width:100%;height:100%;object-fit:fill}.island{position:absolute;z-index:2;top:10px;left:50%;transform:translateX(-50%);width:31%;height:25px;background:#050505;border-radius:20px;pointer-events:none}.screen-hint{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:#b7c4d9;background:#080b12}.screen-hint[hidden]{display:none}.screen-hint strong{display:block;color:#fff;margin-bottom:6px}.homebar{position:absolute;z-index:3;bottom:7px;left:50%;transform:translateX(-50%);width:34%;height:4px;border-radius:4px;background:#fff9;pointer-events:none}.below{width:min(100%,720px);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:17px}.side{background:linear-gradient(180deg,#111827cc,#0e1420aa);border:1px solid #ffffff15;border-radius:16px;padding:16px}.side h2{font-size:14px;margin:0 0 13px}.section{margin-bottom:14px}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.actions button{padding:10px 7px;font-size:12px}.keyboard{display:flex;gap:8px}.keyboard input{min-width:0;flex:1}.keyboard button{white-space:nowrap}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#090e18;border:1px solid #ffffff0e;border-radius:12px;padding:10px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:15px;margin-top:4px;font-variant-numeric:tabular-nums}.details{color:var(--muted);font-size:12px}.details b{color:var(--text);font-weight:550}.logs{display:none;max-height:230px;overflow:auto;background:#080d15;border:1px solid #202b3c;border-radius:11px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.logs.open{display:block}.note{color:#94a2b7;font-size:11px;margin:15px 0 0}.notice{display:none;margin-top:16px;padding:12px 14px;border:1px solid #8a4452;background:#30141d;border-radius:11px;color:#ffdce2}.notice.show{display:block}.notice button{margin-top:8px}.footer{color:#748197;text-align:center;font-size:11px;margin-top:24px}.spinner{width:22px;height:22px;border:2px solid #ffffff25;border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 10px}@keyframes spin{to{transform:rotate(360deg)}}
-    @media(max-width:800px){.shell{padding:14px}.layout{grid-template-columns:1fr;gap:18px}.phone{width:min(86vw,370px)}.side{width:100%}.top{align-items:flex-start}.brand p{max-width:250px}.pill{font-size:12px}}
-    @media(max-width:440px){.top{flex-direction:column}.device-top{align-items:flex-start;flex-direction:column}.phone{width:min(90vw,370px);padding:8px;border-radius:40px}.screen{border-radius:32px}.below{gap:6px}.below button{padding:8px 9px}.layout{padding-top:16px}}
+    .layout{display:grid;grid-template-columns:minmax(330px,1fr) minmax(270px,380px);gap:24px;align-items:start;padding-top:22px}.device-column{display:flex;flex-direction:column;align-items:center;min-width:0}.device-top{width:min(100%,720px);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.device-top label{color:var(--muted);font-size:12px}.select-wrap{display:flex;align-items:center;gap:9px}select,input{background:#141d2c;border:1px solid var(--line);border-radius:9px;padding:9px 11px}select{min-width:132px}.screen{position:relative;overflow:hidden;background:#000;aspect-ratio:var(--screen-ratio);touch-action:none;user-select:none}.screen img{display:block;width:100%;height:100%;object-fit:contain}.screen-hint{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:#b7c4d9;background:#080b12}.screen-hint[hidden]{display:none}.screen-hint strong{display:block;color:#fff;margin-bottom:6px}.below{width:min(100%,720px);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:17px}.side{background:linear-gradient(180deg,#111827cc,#0e1420aa);border:1px solid #ffffff15;border-radius:16px;padding:16px}.side h2{font-size:14px;margin:0 0 13px}.section{margin-bottom:14px}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.actions button{padding:10px 7px;font-size:12px}.keyboard{display:flex;gap:8px}.keyboard input{min-width:0;flex:1}.keyboard button{white-space:nowrap}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#090e18;border:1px solid #ffffff0e;border-radius:12px;padding:10px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:15px;margin-top:4px;font-variant-numeric:tabular-nums}.details{color:var(--muted);font-size:12px}.details b{color:var(--text);font-weight:550}.logs{display:none;max-height:230px;overflow:auto;background:#080d15;border:1px solid #202b3c;border-radius:11px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.logs.open{display:block}.note{color:#94a2b7;font-size:11px;margin:15px 0 0}.notice{display:none;margin-top:16px;padding:12px 14px;border:1px solid #8a4452;background:#30141d;border-radius:11px;color:#ffdce2}.notice.show{display:block}.notice button{margin-top:8px}.footer{color:#748197;text-align:center;font-size:11px;margin-top:24px}.spinner{width:22px;height:22px;border:2px solid #ffffff25;border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 10px}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:800px){.shell{padding:14px}.layout{grid-template-columns:1fr;gap:18px}.side{width:100%}.top{align-items:flex-start}.brand p{max-width:250px}.pill{font-size:12px}}
+    @media(max-width:440px){.top{flex-direction:column}.device-top{align-items:flex-start;flex-direction:column}.below{gap:6px}.below button{padding:8px 9px}.layout{padding-top:16px}}
+    .device-stage{position:relative;width:min(100%,370px);aspect-ratio:var(--stage-ratio,393/852);flex:none;background:transparent}
+    .device-stage .screen{position:absolute;left:var(--screen-left,0%);top:var(--screen-top,0%);width:var(--screen-width,100%);height:var(--screen-height,100%);aspect-ratio:var(--screen-ratio,393/852);border-radius:0;overflow:hidden;background:#000;touch-action:none;user-select:none}
+    .device-stage .screen img{width:100%;height:100%;object-fit:contain}
+    .device-bezel{position:absolute;inset:0;display:none;width:100%;height:100%;object-fit:contain;pointer-events:none}
+    @media(max-width:800px){.device-stage{width:min(86vw,370px)}}
+    @media(max-width:440px){.device-stage{width:min(90vw,370px)}}
+    .notice-command{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:12px}.notice-command code{min-width:0;padding:8px 10px;border:1px solid #ffffff12;border-radius:8px;background:#1b0d14;color:#ffe8ed;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.notice-command button{margin:0;white-space:nowrap}.notice-copy-status{grid-column:1/-1;color:#ffc8d1;font-size:12px}.screen-hint.ended{background:radial-gradient(ellipse at 50% 45%,#17233a,#080b12 68%)}.screen-hint.ended strong{font-size:18px}.screen-hint.ended .end-mark{display:grid;place-items:center;width:44px;height:44px;margin:0 auto 14px;border:1px solid #ff6e8244;border-radius:14px;background:#ff6e8212;color:#ff9aaa;font-size:22px}
   </style>
 </head>
 <body>
@@ -26,20 +33,21 @@
     <main class="layout">
       <section class="device-column" aria-label="iPhone Simulator">
         <div class="device-top">
-          <div class="select-wrap"><label for="device">Simulator</label><select id="device"><option value="iphone15">iPhone 15 closest match</option><option value="latest">Latest available iPhone</option></select></div>
+          <div class="select-wrap"><label for="device">Simulator</label><select id="device" aria-label="Simulator model" disabled><option value="">Waiting for session</option></select></div>
           <div class="pill"><span id="deviceName">Waiting for simulator…</span></div>
         </div>
-        <div class="phone"><div id="screen" class="screen" aria-label="Simulator screen">
-          <div class="island"></div><img id="frame" alt="Live iPhone Simulator screen"><div id="screenHint" class="screen-hint"><div><div class="spinner"></div><strong>Waiting for the first frame</strong>Keep this tab open while the runner starts.</div></div><div class="homebar"></div>
-        </div></div>
+        <div id="deviceStage" class="device-stage"><div id="screen" class="screen" aria-label="Simulator screen">
+          <img id="frame" alt="Live iPhone Simulator screen"><div id="screenHint" class="screen-hint" aria-live="polite"><div><div class="spinner"></div><strong>Waiting for the first frame</strong>Keep this tab open while the runner starts.</div></div>
+        </div><img id="deviceBezel" class="device-bezel" alt="" aria-hidden="true"></div>
         <div class="below">
-          <button data-action="home" title="Home button">⌂ Home</button><button data-action="lock" title="Lock the simulator">⏻ Lock</button><button data-action="rotate" title="Rotate the simulator">⟳ Rotate</button><button data-action="screenshot" title="Save a screenshot">▣ Screenshot</button><button data-action="reload" title="Restart the app">↻ Relaunch</button><button data-action="shake" title="Shake the simulator">〰 Shake</button>
+          <button data-action="home" title="Home button" disabled>⌂ Home</button><button data-action="lock" title="Lock the simulator" disabled>⏻ Lock</button><button data-action="rotate" title="Rotate the simulator" disabled>⟳ Rotate</button><button data-action="screenshot" title="Save a screenshot" disabled>▣ Screenshot</button><button data-action="reload" title="Restart the app" disabled>↻ Relaunch</button><button data-action="shake" title="Shake the simulator" disabled>〰 Shake</button>
         </div>
       </section>
       <aside class="side">
+        <p id="displayDetails" class="details" aria-live="polite">Waiting for runtime display measurements.</p>
         <div class="section"><h2>Session</h2><div class="metrics"><div class="metric"><span>Frame rate</span><strong id="fps">— fps</strong></div><div class="metric"><span>Last action</span><strong id="latency">—</strong></div><div class="metric"><span>Time remaining</span><strong id="remaining">—</strong></div><div class="metric"><span>Screen</span><strong id="dimensions">—</strong></div></div></div>
-        <div class="section"><h2>Simulator controls</h2><div class="actions"><button id="appearance">☾ Dark mode</button><button id="logsToggle">▤ Logs</button><button id="keyboardFocus">⌨ Keyboard</button></div></div>
-        <div class="section keyboard"><input id="keyboardText" maxlength="500" autocomplete="off" placeholder="Type into the app…"><button id="sendText">Send</button></div>
+        <div class="section"><h2>Simulator controls</h2><div class="actions"><button id="appearance" disabled>☾ Dark mode</button><button id="logsToggle">▤ Logs</button><button id="keyboardFocus" disabled>⌨ Keyboard</button></div></div>
+        <div class="section keyboard"><input id="keyboardText" maxlength="500" autocomplete="off" placeholder="Type into the app…" disabled><button id="sendText" disabled>Send</button></div>
         <div class="section"><div id="logs" class="logs" aria-live="polite"></div></div>
         <p class="note">The simulator runs in a temporary GitHub macOS job. Camera, push notifications, and other hardware-only features are unavailable.</p>
       </aside>
@@ -52,6 +60,7 @@
       const token = params.get('t') || '';
       const host = params.get('s') || '';
       const sessionId = params.get('id') || '';
+      const START_COMMAND = 'npx --yes --ignore-scripts --allow-git=all "github:kerolosmohsen/ui-ios#main" start';
       const $ = (id) => document.getElementById(id);
       const notice = $('notice');
       const dot = $('statusDot');
@@ -70,21 +79,101 @@
       let pointer = null;
       let closed = false;
 
+      function setInteractive(enabled) {
+        for (const element of document.querySelectorAll('[data-action], #device, #appearance, #keyboardFocus, #keyboardText, #sendText')) {
+          element.disabled = !enabled;
+        }
+        screen.style.pointerEvents = enabled ? 'auto' : 'none';
+      }
+      function setScreenState(title, description, {ended = false, loading = false} = {}) {
+        hint.replaceChildren();
+        hint.classList.toggle('ended', ended);
+        const content = document.createElement('div');
+        if (ended) {
+          const mark = document.createElement('div');
+          mark.className = 'end-mark';
+          mark.textContent = '!';
+          content.append(mark);
+        } else if (loading) {
+          const spinner = document.createElement('div');
+          spinner.className = 'spinner';
+          content.append(spinner);
+        }
+        const heading = document.createElement('strong');
+        heading.textContent = title;
+        const detail = document.createElement('span');
+        detail.textContent = description;
+        content.append(heading, detail);
+        hint.append(content);
+        hint.hidden = false;
+      }
+      async function copyStartCommand(button, status) {
+        let copied = false;
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+          await navigator.clipboard.writeText(START_COMMAND);
+          copied = true;
+        } catch {
+          const field = document.createElement('textarea');
+          field.value = START_COMMAND;
+          field.style.position = 'fixed';
+          field.style.opacity = '0';
+          try {
+            document.body.append(field);
+            field.select();
+            copied = document.execCommand('copy');
+          } catch {
+            copied = false;
+          } finally {
+            field.remove();
+          }
+        }
+        button.textContent = copied ? 'Copied' : 'Select command';
+        status.textContent = copied
+          ? 'Paste it into the terminal opened in your React Native project.'
+          : 'Copy the command above and paste it into your project terminal.';
+      }
       function showNotice(message, expired = false) {
         notice.replaceChildren(document.createTextNode(message));
         if (expired) {
           const line = document.createElement('div');
+          line.className = 'notice-command';
+          const code = document.createElement('code');
+          code.textContent = START_COMMAND;
           const button = document.createElement('button');
-          button.textContent = 'Start a new session';
-          button.addEventListener('click', () => { notice.textContent = 'Run `ui-ios start` again from your React Native project.'; });
-          line.append(button);
+          button.textContent = 'Copy command';
+          const status = document.createElement('span');
+          status.className = 'notice-copy-status';
+          button.addEventListener('click', () => { void copyStartCommand(button, status); });
+          line.append(code, button, status);
           notice.append(line);
         }
         notice.classList.add('show');
       }
       function setConnection(state, text) { dot.className = `dot ${state}`; connection.textContent = text; }
+      function setSessionEnded(message, status = 'Session ended') {
+        closed = true;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (heartbeat) clearInterval(heartbeat);
+        if (socket && socket.readyState !== WebSocket.CLOSED) socket.close(1000, 'Session ended');
+        setInteractive(false);
+        setConnection('offline', status);
+        $('deviceName').textContent = status;
+        $('fps').textContent = '\u2014 fps';
+        $('latency').textContent = '\u2014';
+        $('remaining').textContent = '\u2014';
+        $('dimensions').textContent = '\u2014';
+        $('displayDetails').textContent = 'No active simulator data.';
+        const previous = frame.dataset.url;
+        frame.removeAttribute('src');
+        delete frame.dataset.url;
+        if (previous) URL.revokeObjectURL(previous);
+        setScreenState(status, 'Start a new session from your React Native project terminal.', {ended: true});
+        showNotice(message, true);
+      }
       function send(message) {
-        if (!socket || socket.readyState !== WebSocket.OPEN) { showNotice('The simulator is reconnecting. Try again in a moment.'); return; }
+        if (closed) { showNotice('This session has ended. Start a new session from your project terminal.', true); return; }
+        if (!socket || socket.readyState !== WebSocket.OPEN) { showNotice('The connection is interrupted. Controls will work again after it reconnects.'); return; }
         socket.send(JSON.stringify(message));
       }
       function appendLog(line) {
@@ -97,7 +186,72 @@
       function setDeviceSize(size) {
         if (!size || !(size.width > 0) || !(size.height > 0)) return;
         screen.style.setProperty('--screen-ratio', `${size.width} / ${size.height}`);
+        screen.style.aspectRatio = `${size.width} / ${size.height}`;
         $('dimensions').textContent = `${size.width} × ${size.height}`;
+      }
+      function setDeviceFrame(device, size) {
+        const stage = $('deviceStage');
+        const bezel = $('deviceBezel');
+        if (size.width > size.height) {
+          stage.style.aspectRatio = `${size.width} / ${size.height}`;
+          for (const [property, value] of [['left', '0%'], ['top', '0%'], ['width', '100%'], ['height', '100%']]) {
+            screen.style.setProperty(`--screen-${property}`, value);
+          }
+          bezel.removeAttribute('src');
+          bezel.style.display = 'none';
+          return;
+        }
+        const frameSpec = device && device.frame;
+        if (!frameSpec || !(frameSpec.width > 0) || !(frameSpec.height > 0) || !frameSpec.screenBounds) {
+          stage.style.aspectRatio = `${size.width} / ${size.height}`;
+          for (const [property, value] of [['left', '0%'], ['top', '0%'], ['width', '100%'], ['height', '100%']]) {
+            screen.style.setProperty(`--screen-${property}`, value);
+          }
+          bezel.removeAttribute('src');
+          bezel.style.display = 'none';
+          return;
+        }
+        const aperture = frameSpec.screenBounds;
+        const runtimeRatio = size.width / size.height;
+        const apertureRatio = aperture.width / aperture.height;
+        const bounds = {...aperture};
+        if (apertureRatio > runtimeRatio) {
+          bounds.width = aperture.height * runtimeRatio;
+          bounds.x += (aperture.width - bounds.width) / 2;
+        } else if (apertureRatio < runtimeRatio) {
+          bounds.height = aperture.width / runtimeRatio;
+          bounds.y += (aperture.height - bounds.height) / 2;
+        }
+        stage.style.aspectRatio = `${frameSpec.width} / ${frameSpec.height}`;
+        screen.style.setProperty('--screen-left', `${bounds.x / frameSpec.width * 100}%`);
+        screen.style.setProperty('--screen-top', `${bounds.y / frameSpec.height * 100}%`);
+        screen.style.setProperty('--screen-width', `${bounds.width / frameSpec.width * 100}%`);
+        screen.style.setProperty('--screen-height', `${bounds.height / frameSpec.height * 100}%`);
+        bezel.src = frameSpec.src;
+        bezel.style.display = 'block';
+      }
+      function setDeviceOptions(devices, currentPreset, size) {
+        if (!Array.isArray(devices) || !devices.length) return;
+        const select = $('device');
+        select.replaceChildren(...devices.map((device) => new Option(device.label, device.id)));
+        select.value = devices.some((device) => device.id === currentPreset) ? currentPreset : devices[0].id;
+        select.disabled = devices.length < 2;
+        const selected = devices.find((device) => device.id === select.value);
+        $('deviceName').textContent = selected?.label || 'iPhone Simulator';
+        setDeviceFrame(selected, size || {width: 393, height: 852});
+      }
+      function setDeviceProfile(profile) {
+        if (!profile) return;
+        const safe = profile.safeAreaInsetsPoints || {};
+        const status = profile.statusBarHeightPoints == null ? 'unknown' : `${profile.statusBarHeightPoints} pt`;
+        const top = safe.top == null ? 'unknown' : `${safe.top} pt`;
+        const bottom = safe.bottom == null ? 'unknown' : `${safe.bottom} pt`;
+        $('displayDetails').textContent = `${profile.points.width} x ${profile.points.height} pt; ${profile.pixels.width} x ${profile.pixels.height} px @${profile.scale}x; status bar ${status}; safe area top ${top}, bottom ${bottom}.`;
+      }
+      function updateDeviceDisplay(message) {
+        if (message.logicalSize) setDeviceSize(message.logicalSize);
+        if (Array.isArray(message.devices)) setDeviceOptions(message.devices, message.preset, message.logicalSize);
+        setDeviceProfile(message.deviceProfile);
       }
       function connect() {
         if (closed) return;
@@ -122,22 +276,23 @@
           if (message.type === 'ready') {
             disconnectedAt = 0;
             setConnection('online', 'Connected');
-            $('deviceName').textContent = message.deviceName || 'iPhone Simulator';
-            if (message.logicalSize) setDeviceSize(message.logicalSize);
+            setInteractive(true);
+            updateDeviceDisplay(message);
+            notice.classList.remove('show');
+            notice.replaceChildren();
             if (message.fps) $('fps').textContent = `${message.fps} fps`;
             if (heartbeat) clearInterval(heartbeat);
             heartbeat = setInterval(() => send({type: 'heartbeat'}), 30000);
           } else if (message.type === 'status') {
             setConnection(message.connected ? 'online' : 'wait', message.connected ? 'Connected' : 'Reconnecting…');
-            $('deviceName').textContent = message.deviceName || 'iPhone Simulator';
+            updateDeviceDisplay(message);
             $('fps').textContent = `${Number(message.fps || 0).toFixed(1)} fps`;
             $('remaining').textContent = formatTime(message.remainingMs);
-            if (message.logicalSize) setDeviceSize(message.logicalSize);
             if (message.provider) $('fps').title = `Stream: ${message.provider}`;
           } else if (message.type === 'device-loading') {
-            hint.hidden = false;
-            hint.innerHTML = '<div><div class="spinner"></div><strong>Changing simulator…</strong>Booting the selected device and reinstalling the app.</div>';
-            setConnection('wait', 'Changing simulator…');
+            setInteractive(false);
+            setScreenState('Changing simulator...', 'Booting the selected device and reinstalling the app.', {loading: true});
+            setConnection('wait', 'Changing simulator...');
           } else if (message.type === 'logs') {
             (message.lines || []).forEach(appendLog);
           } else if (message.type === 'log' || message.type === 'app-log') {
@@ -151,26 +306,30 @@
             link.download = message.filename || 'simulator-screenshot.png';
             link.click();
           } else if (message.type === 'error') {
-            showNotice(message.message || 'The session link is invalid. Start a new session.', true);
+            setSessionEnded(message.message || 'This session link is invalid or expired. Start a new session.');
           }
         };
-        socket.onerror = () => setConnection('wait', 'Connection interrupted…');
+        socket.onerror = () => {
+          setConnection('wait', 'Connection interrupted...');
+          setInteractive(false);
+          showNotice('The connection to the simulator was interrupted. Reconnecting automatically...');
+        };
         socket.onclose = (event) => {
+          if (closed) return;
           if (heartbeat) clearInterval(heartbeat);
           if ([1008, 1007].includes(event.code)) {
-            closed = true;
-            setConnection('offline', 'Session expired');
-            showNotice(event.reason || 'This session link has expired. Start the command again in your React Native project.', true);
+            setSessionEnded('This session link has expired or the runner has stopped. Start a new session from your project terminal.', 'Session expired');
             return;
           }
           if (!disconnectedAt) disconnectedAt = Date.now();
           if (Date.now() - disconnectedAt >= 240000) {
-            closed = true;
-            setConnection('offline', 'Session ended');
-            showNotice('This simulator session has ended or its tunnel expired. Run `ui-ios start` again in your React Native project.', true);
+            setSessionEnded('This simulator session has ended or its tunnel expired. Start a new session from your project terminal.');
             return;
           }
-          setConnection('wait', 'Connection lost · retrying…');
+          setConnection('wait', 'Connection lost - retrying...');
+          setInteractive(false);
+          setScreenState('Connection lost', 'Trying to reconnect to the simulator...', {loading: true});
+          showNotice('The connection to the simulator was interrupted. Reconnecting automatically...');
           scheduleReconnect();
         };
       }
@@ -210,9 +369,7 @@
       $('keyboardText').addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); $('sendText').click(); } });
 
       if (!token || !/^[a-f0-9]{64}$/i.test(token) || !/^[a-z0-9-]+\.trycloudflare\.com$/i.test(host) || !sessionId) {
-        closed = true;
-        setConnection('offline', 'No active session');
-        showNotice('This session link is incomplete or expired. Run `ui-ios start` again in your React Native project.', true);
+        setSessionEnded('This session link is incomplete or expired. Start a new session from your project terminal.', 'No active session');
       } else {
         connect();
       }
