@@ -75,21 +75,17 @@ try {
       run('xcrun', ['simctl', 'install', simulator.udid, appPath]);
       run('xcrun', ['simctl', 'launch', simulator.udid, bundleId]);
 
+      // Device Hub keeps the first selected simulator when additional devices
+      // are booted. Relaunch it for each target so the window attaches to the
+      // simulator currently running the probe app.
+      const processName = path.basename(simulatorApp, '.app');
+      const quit = tryRun('osascript', ['-e', `tell application "${processName}" to quit`]);
+      if (quit.status !== 0) console.warn(`Could not quit the previous ${processName} window: ${(quit.stderr || '').trim()}`);
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
       const opened = tryRun('open', ['-a', simulatorApp]);
       if (opened.status !== 0) throw new Error((opened.stderr || opened.error?.message || 'Could not open the simulator window.').trim());
       await new Promise((resolve) => setTimeout(resolve, 10_000));
 
-      const processName = path.basename(simulatorApp, '.app');
-      const activate = tryRun('osascript', ['-e', `tell application "System Events" to tell process "${processName}" to set frontmost to true`]);
-      if (activate.status !== 0) console.warn(`Could not focus the ${processName} window through AppleScript: ${(activate.stderr || '').trim()}`);
-      const bezelMenuScript = `tell application "System Events"\n  tell process "${processName}"\n    set frontmost to true\n    click menu bar item "Window" of menu bar 1\n    delay 0.2\n    if exists menu item "Show Device Bezels" of menu 1 of menu bar item "Window" of menu bar 1 then\n      click menu item "Show Device Bezels" of menu 1 of menu bar item "Window" of menu bar 1\n    end if\n  end tell\nend tell`;
-      const bezelMenu = tryRun('osascript', ['-e', bezelMenuScript]);
-      if (bezelMenu.status === 0) {
-        tryRun('osascript', ['-e', `tell application "System Events" to tell process "${processName}" to key code 53`]);
-      } else {
-        console.warn(`Could not inspect the ${processName} Window menu: ${(bezelMenu.stderr || '').trim()}`);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1_000));
       const screenshotPath = path.join(evidence, `${device.id}-simulator-window.png`);
       run('screencapture', ['-x', screenshotPath]);
       console.log(`Desktop capture saved: ${path.relative(root, screenshotPath)}.`);
