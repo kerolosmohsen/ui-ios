@@ -145,7 +145,10 @@ async function createProjectSnapshot(options) {
         const runtimeDestination = node_path_1.default.join(destination, 'ui-ios-runtime');
         await promises_1.default.cp(runtimeSource, runtimeDestination, {
             recursive: true,
-            filter: (sourcePath) => !sourcePath.split(node_path_1.default.sep).some((segment) => HARD_EXCLUDED_SEGMENTS.has(segment)),
+            filter: (sourcePath) => {
+                const relativePath = node_path_1.default.relative(runtimeSource, sourcePath);
+                return relativePath === '' || !relativePath.split(node_path_1.default.sep).some((segment) => HARD_EXCLUDED_SEGMENTS.has(segment));
+            },
         });
         const walkRuntime = async (directory, relative = 'ui-ios-runtime') => {
             for (const entry of await promises_1.default.readdir(directory, { withFileTypes: true })) {

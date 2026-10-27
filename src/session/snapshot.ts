@@ -186,7 +186,10 @@ export async function createProjectSnapshot(options: SnapshotOptions): Promise<S
     const runtimeDestination = path.join(destination, 'ui-ios-runtime');
     await fs.cp(runtimeSource, runtimeDestination, {
       recursive: true,
-      filter: (sourcePath) => !sourcePath.split(path.sep).some((segment) => HARD_EXCLUDED_SEGMENTS.has(segment)),
+      filter: (sourcePath) => {
+        const relativePath = path.relative(runtimeSource, sourcePath);
+        return relativePath === '' || !relativePath.split(path.sep).some((segment) => HARD_EXCLUDED_SEGMENTS.has(segment));
+      },
     });
     const walkRuntime = async (directory: string, relative = 'ui-ios-runtime'): Promise<void> => {
       for (const entry of await fs.readdir(directory, { withFileTypes: true })) {

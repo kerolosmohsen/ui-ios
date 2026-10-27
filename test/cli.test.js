@@ -232,6 +232,31 @@ test('copies a filtered snapshot from a Windows-style project path without leaki
   }
 });
 
+test('copies the bundled runtime even when its source lives under node_modules', async () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-ios-runtime-source-'));
+  const project = path.join(temp, 'project');
+  const runtime = path.join(temp, 'node_modules', 'ui-ios', 'templates', 'runtime');
+  const destination = path.join(temp, 'snapshot');
+  fs.mkdirSync(project, { recursive: true });
+  fs.mkdirSync(path.join(runtime, 'node_modules', 'nested'), { recursive: true });
+  fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ dependencies: { 'react-native': '0.88.0' } }));
+  fs.writeFileSync(path.join(runtime, 'server.mjs'), 'export default true;');
+  fs.writeFileSync(path.join(runtime, 'node_modules', 'nested', 'ignored.js'), 'excluded');
+  try {
+    await createProjectSnapshot({
+      projectRoot: project,
+      destination,
+      excludeGlobs: [],
+      includeEnv: false,
+      runtimeSource: runtime,
+    });
+    assert.equal(fs.existsSync(path.join(destination, 'ui-ios-runtime', 'server.mjs')), true);
+    assert.equal(fs.existsSync(path.join(destination, 'ui-ios-runtime', 'node_modules')), false);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
 test('applies custom glob exclusions to directories and files', async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-ios-globs-'));
   const project = path.join(temp, 'project');
