@@ -1,0 +1,33 @@
+name: Capture real Simulator device bezels
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture-device-windows:
+    name: Capture Simulator windows for frame measurements
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Capture the complete Simulator device windows
+        run: node scripts/capture-simulator-window.mjs
+
+      - name: Upload Simulator window screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-ios-simulator-bezel-captures
+          path: evidence/device-bezels/
+          if-no-files-found: warn
+          retention-days: 30
