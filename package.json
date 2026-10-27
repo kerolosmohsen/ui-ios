@@ -1,0 +1,62 @@
+{
+  "name": "ui-ios",
+  "version": "1.0.0",
+  "description": "Open a personal iOS Simulator in your browser using GitHub Actions",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kerolosmohsen/ui-ios.git"
+  },
+  "homepage": "https://kerolosmohsen.github.io/ui-ios/",
+  "main": "src/index.js",
+  "bin": {
+    "ui-ios": "./bin/ui-ios.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "dist/",
+    "templates/",
+    "README.md",
+    "LICENSE",
+    "PHASE0_REPORT.md",
+    "evidence/phase0/",
+    "site/"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
+    "test": "node --test test/cli.test.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint bin/ src/ test/ templates/runtime/ --ext .js,.ts,.mjs"
+  },
+  "keywords": [
+    "react-native",
+    "ios",
+    "ui-testing",
+    "detox",
+    "github-actions",
+    "cli",
+    "simulator"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0",
+    "ignore": "^7.0.14",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "picomatch": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "eslint": "^8.57.1",
+    "typescript": "^6.0.3"
+  }
+}

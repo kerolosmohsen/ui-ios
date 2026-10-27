@@ -1,0 +1,209 @@
+name: ui-ios-session
+
+on:
+  workflow_dispatch:
+    inputs:
+      session_id:
+        description: Random identifier for this preview
+        required: true
+        type: string
+      session_branch:
+        description: Temporary orphan branch containing the app snapshot
+        required: true
+        type: string
+      device:
+        description: Simulator preference
+        required: true
+        type: choice
+        options:
+          - iphone15
+          - latest
+      session_token:
+        description: One-session browser authentication token
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ui-ios-personal-simulator
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Build and run iOS Simulator preview
+    runs-on: macos-latest
+    timeout-minutes: 360
+    steps:
+      - name: Mask the session token before other steps
+        env:
+          SESSION_TOKEN: ${{ inputs.session_token }}
+        run: echo "::add-mask::$SESSION_TOKEN"
+
+      - name: Check out the session snapshot
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.session_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Resolve project Node and package manager
+        id: toolchain
+        run: node ui-ios-runtime/resolve-toolchain.mjs >> "$GITHUB_OUTPUT"
+
+      - name: Set up project Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ steps.toolchain.outputs.node_version }}
+
+      - name: Select configured Xcode
+        run: node ui-ios-runtime/select-xcode.mjs
+
+      - name: Install JavaScript dependencies
+        env:
+          PACKAGE_MANAGER: ${{ steps.toolchain.outputs.package_manager }}
+        run: |
+          set -euo pipefail
+          case "$PACKAGE_MANAGER" in
+            npm-ci) npm ci ;;
+            npm-install) npm install ;;
+            yarn-classic) corepack enable && corepack yarn install --frozen-lockfile ;;
+            yarn) corepack enable && corepack yarn install --immutable ;;
+            pnpm) corepack enable && corepack pnpm install --frozen-lockfile ;;
+            *) echo "Unsupported package manager: $PACKAGE_MANAGER" >&2; exit 1 ;;
+          esac
+
+      - name: Install the WebSocket preview server dependency
+        run: npm ci --prefix ui-ios-runtime --ignore-scripts --no-audit --no-fund
+
+      - name: Cache CocoaPods and Xcode DerivedData
+        uses: actions/cache@v6
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Developer/Xcode/DerivedData/ui-ios-preview
+          key: ${{ runner.os }}-ios-${{ hashFiles('package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/*.podspec', 'ios/**/*.pbxproj') }}
+
+      - name: Install CocoaPods dependencies
+        if: hashFiles('ios/Podfile') != ''
+        working-directory: ios
+        env:
+          LANG: en_US.UTF-8
+        run: |
+          set -euo pipefail
+          if [[ -f ../Gemfile ]]; then
+            bundle install
+            bundle exec pod install
+          else
+            pod install
+          fi
+
+      - name: Install IDB and Cloudflare Quick Tunnel
+        run: |
+          set -euo pipefail
+          brew tap facebook/fb
+          brew trust --formula facebook/fb/idb-cli
+          brew trust --formula facebook/fb/idb-companion
+          brew install facebook/fb/idb-cli facebook/fb/idb-companion cloudflared
+          idb --help >/dev/null
+          idb video-stream --help >/dev/null
+          cloudflared --version
+
+      - name: Select and boot a compatible iPhone Simulator
+        id: simulator
+        env:
+          DEVICE_PRESET: ${{ inputs.device }}
+        run: node ui-ios-runtime/select-simulator.mjs >> "$GITHUB_OUTPUT"
+
+      - name: Build the iOS app with its JavaScript bundle
+        id: build
+        env:
+          FORCE_BUNDLING: '1'
+          LANG: en_US.UTF-8
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          echo "DERIVED_DATA=$HOME/Library/Developer/Xcode/DerivedData/ui-ios-preview" >> "$GITHUB_ENV"
+          DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/ui-ios-preview" node ui-ios-runtime/build-ios.mjs >> "$GITHUB_OUTPUT"
+
+      - name: Install and launch the app
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+          APP_PATH: ${{ steps.build.outputs.app_path }}
+          APP_BUNDLE_ID: ${{ steps.build.outputs.bundle_id }}
+        run: |
+          set -euo pipefail
+          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+          xcrun simctl launch "$SIMULATOR_UDID" "$APP_BUNDLE_ID"
+          idb connect "$SIMULATOR_UDID"
+          idb launch --foreground-if-running "$APP_BUNDLE_ID" --udid "$SIMULATOR_UDID"
+          {
+            echo "SIMULATOR_UDID=$SIMULATOR_UDID"
+            echo "SIMULATOR_NAME=${{ steps.simulator.outputs.name }}"
+            echo "BOOT_SECONDS=${{ steps.simulator.outputs.boot_seconds }}"
+            echo "APP_PATH=$APP_PATH"
+            echo "APP_BUNDLE_ID=$APP_BUNDLE_ID"
+          } >> "$GITHUB_ENV"
+
+      - name: Refresh the trusted preview runtime after project build scripts
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/kerolosmohsen/ui-ios.git "$RUNNER_TEMP/ui-ios-tool-source"
+          cp "$RUNNER_TEMP/ui-ios-tool-source/templates/runtime/"*.mjs ui-ios-runtime/
+
+      - name: Start the browser preview and wait for stop or timeout
+        env:
+          SESSION_ID: ${{ inputs.session_id }}
+          SESSION_BRANCH: ${{ inputs.session_branch }}
+          SESSION_TOKEN: ${{ inputs.session_token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+          SIMULATOR_NAME: ${{ steps.simulator.outputs.name }}
+          APP_PATH: ${{ steps.build.outputs.app_path }}
+          APP_BUNDLE_ID: ${{ steps.build.outputs.bundle_id }}
+          BOOT_SECONDS: ${{ steps.simulator.outputs.boot_seconds }}
+          RUN_ID: ${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          ALLOWED_ORIGIN: https://${{ github.repository_owner }}.github.io
+          LANG: en_US.UTF-8
+        run: node ui-ios-runtime/run-session.mjs
+
+      - name: Upload simulator screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-ios-session-${{ inputs.session_id }}
+          path: ui-ios-runtime/runner-evidence/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Delete temporary snapshot branch
+        if: always()
+        env:
+          SESSION_BRANCH: ${{ inputs.session_branch }}
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'NODE'
+          const branch = process.env.SESSION_BRANCH || '';
+          const repository = process.env.REPOSITORY || '';
+          const token = process.env.GITHUB_TOKEN || '';
+          if (!/^session\/[a-f0-9-]{36}$/i.test(branch) || !/^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(repository) || !token) {
+            throw new Error('Temporary branch cleanup parameters are invalid.');
+          }
+          const [owner, name] = repository.split('/');
+          const ref = encodeURIComponent(`heads/${branch}`);
+          const response = await fetch(`https://api.github.com/repos/${owner}/${name}/git/refs/${ref}`, {
+            method: 'DELETE',
+            headers: {
+              Accept: 'application/vnd.github+json',
+              Authorization: `Bearer ${token}`,
+              'X-GitHub-Api-Version': '2026-03-10',
+            },
+          });
+          if (response.status !== 204 && response.status !== 404) {
+            throw new Error(`Could not delete the temporary branch (HTTP ${response.status}).`);
+          }
+          console.log('Temporary project snapshot branch removed.');
+          NODE

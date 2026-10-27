@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+*.pem
+*.key
+*.token
+secrets*
+credentials*
+.ui-ios/
+.tools/
+/MyTestApp/
+codex-prompt.md
