@@ -112,9 +112,13 @@ test('init writes configuration, adds ignore paths, and preserves them on later 
     assert.match(workflow, /node-version: '24'/);
     assert.match(workflow, /Generate native iOS project for Expo/);
     assert.match(workflow, /npx expo prebuild --platform ios --no-install/);
+    assert.match(workflow, /PACKAGE_MANAGER=.*packageManager/);
+    assert.match(workflow, /pnpm install --frozen-lockfile --allow-build=detox/);
     const sessionWorkflow = fs.readFileSync(path.join(__dirname, '../templates/session/.github/workflows/ui-ios-session.yml'), 'utf8');
     assert.match(sessionWorkflow, /Generate native iOS project for Expo/);
     assert.match(sessionWorkflow, /npx expo prebuild --platform ios --no-install/);
+    assert.match(sessionWorkflow, /--allow-build='!detox'/);
+    assert.match(workflow, /--allow-build=detox/);
     assert.match(workflow, /bundle exec pod install/);
     assert.match(workflow, /brew install wix\/brew\/applesimutils/);
     assert.match(workflow, /actions\/checkout@v7/);

@@ -75,7 +75,7 @@ jobs:
             npm-install) npm install ;;
             yarn-classic) corepack enable && corepack yarn install --frozen-lockfile ;;
             yarn) corepack enable && corepack yarn install --immutable ;;
-            pnpm) corepack enable && corepack pnpm install --frozen-lockfile ;;
+            pnpm) corepack enable && corepack pnpm install --frozen-lockfile --allow-build='!detox' --allow-build='!dtrace-provider' ;;
             *) echo "Unsupported package manager: $PACKAGE_MANAGER" >&2; exit 1 ;;
           esac
 

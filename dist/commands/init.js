@@ -45,7 +45,7 @@ function packageInstallCommand(packageManager, packages) {
     if (packageManager === 'yarn')
         return ['yarn', ['add', '--dev', ...packages]];
     if (packageManager === 'pnpm')
-        return ['pnpm', ['add', '--save-dev', ...packages]];
+        return ['pnpm', ['add', '--save-dev', '--ignore-scripts', ...packages]];
     return ['npm', ['install', '--save-dev', ...packages, '--legacy-peer-deps']];
 }
 function hasManifestDependency(cwd, packageName) {
