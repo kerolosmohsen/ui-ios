@@ -15,16 +15,18 @@ Expo projects without `ios/` need native files. `ui-ios start` asks before runni
 
 ## Quick start
 
+The commands below work with npm 12: npm blocks Git dependencies by default, so `--allow-git=all` opts in for that command only. `--ignore-scripts` keeps install-time scripts disabled; the repository includes its compiled CLI files.
+
 Run once inside each React Native project to add the project configuration and preserve the existing Detox setup:
 
 ```powershell
-npx github:kerolosmohsen/ui-ios init
+npx --ignore-scripts --allow-git=all github:kerolosmohsen/ui-ios init
 ```
 
 Then start the simulator from that project:
 
 ```powershell
-npx github:kerolosmohsen/ui-ios start
+npx --ignore-scripts --allow-git=all github:kerolosmohsen/ui-ios start
 ```
 
 On first start, the CLI explains Actions costs and asks before creating the private sessions repository. The app snapshot is uploaded to a temporary orphan branch in that repository. The CLI never uses or changes the app project's Git remote, branch, or commits.
@@ -32,7 +34,7 @@ On first start, the CLI explains Actions costs and asks before creating the priv
 Use one command globally instead, if preferred:
 
 ```powershell
-npm install --global github:kerolosmohsen/ui-ios
+npm install --global --ignore-scripts --allow-git=all github:kerolosmohsen/ui-ios
 ui-ios init
 ui-ios start
 ```
