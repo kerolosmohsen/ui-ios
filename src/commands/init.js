@@ -49,18 +49,47 @@ function readTemplate(templatePath) {
   return fs.readFileSync(sourcePath, 'utf8');
 }
 
-function packageInstallCommand(packageManager) {
-  if (packageManager === 'yarn') return ['yarn', ['add', '--dev', 'detox', 'jest']];
-  if (packageManager === 'pnpm') return ['pnpm', ['add', '--save-dev', 'detox', 'jest']];
-  return ['npm', ['install', '--save-dev', 'detox', 'jest', '--legacy-peer-deps']];
+function packageInstallCommand(packageManager, packages) {
+  if (packageManager === 'yarn') return ['yarn', ['add', '--dev', ...packages]];
+  if (packageManager === 'pnpm') return ['pnpm', ['add', '--save-dev', ...packages]];
+  return ['npm', ['install', '--save-dev', ...packages, '--legacy-peer-deps']];
 }
 
-function runPackageInstall(packageManager, cwd) {
-  const [command, args] = packageInstallCommand(packageManager);
+function hasManifestDependency(cwd, packageName) {
+  const packageJson = fs.readJsonSync(path.join(cwd, 'package.json'));
+  return Boolean(
+    packageJson.dependencies?.[packageName] ||
+    packageJson.devDependencies?.[packageName] ||
+    packageJson.peerDependencies?.[packageName] ||
+    packageJson.optionalDependencies?.[packageName]
+  );
+}
+
+function runPackageInstall(packageManager, cwd, packages) {
+  const [command, args] = packageInstallCommand(packageManager, packages);
+  const env = { ...process.env };
+  if (command === 'npm') {
+    // npx exports its one-off security flags to child processes. Keep those
+    // flags scoped to fetching ui-ios; the project's own npm policy governs
+    // this project-scoped dependency install.
+    const oneOffNpmFlags = new Set([
+      'npm_config_allow_git',
+      'npm_config_allow_remote',
+      'npm_config_allow_file',
+      'npm_config_allow_directory',
+      'npm_config_allow_scripts',
+      'npm_config_dangerously_allow_all_scripts',
+      'npm_config_ignore_scripts',
+    ]);
+    for (const key of Object.keys(env)) {
+      if (oneOffNpmFlags.has(key.toLowerCase())) delete env[key];
+    }
+  }
   const result = spawnSync(command, args, {
     cwd,
     stdio: 'inherit',
     shell: process.platform === 'win32',
+    env,
   });
 
   if (result.error) throw new Error(`Could not start ${command}: ${result.error.message}`);
@@ -145,15 +174,18 @@ async function runInit(options = {}) {
 
   logger.step(3, 5, 'Preparing Detox and Jest...');
   const hasDetox = detectDetoxDependency(cwd);
-  const shouldInstall = !options.skipInstall && (!hasDetox || !fs.existsSync(path.join(cwd, 'node_modules', 'jest')));
+  const packagesToInstall = [];
+  if (!hasDetox) packagesToInstall.push('detox');
+  if (!hasManifestDependency(cwd, 'jest')) packagesToInstall.push('jest');
+  const shouldInstall = !options.skipInstall && packagesToInstall.length > 0;
   if (shouldInstall && isDryRun) {
-    const [command, args] = packageInstallCommand(projectInfo.packageManager);
+    const [command, args] = packageInstallCommand(projectInfo.packageManager, packagesToInstall);
     logger.info(`[DRY RUN] Would run ${command} ${args.join(' ')}.`);
   } else if (shouldInstall) {
-    const spinner = ora(`Installing Detox and Jest with ${projectInfo.packageManager}...`).start();
+    const spinner = ora(`Installing ${packagesToInstall.join(' and ')} with ${projectInfo.packageManager}...`).start();
     try {
-      runPackageInstall(projectInfo.packageManager, cwd);
-      spinner.succeed('Detox and Jest are installed.');
+      runPackageInstall(projectInfo.packageManager, cwd, packagesToInstall);
+      spinner.succeed(`${packagesToInstall.join(' and ')} ${packagesToInstall.length === 1 ? 'is' : 'are'} installed.`);
     } catch (error) {
       spinner.fail('Could not install UI testing dependencies.');
       throw error;
