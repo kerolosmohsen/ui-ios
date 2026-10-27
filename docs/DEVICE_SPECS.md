@@ -24,7 +24,9 @@ The Phase 0 profile check uses GitHub's `xcode-27` image because the current `ma
 
 ## Phone frames
 
-The app does not draw a guessed Dynamic Island, bezel, or corner radius. Apple Design Resources provides official product bezel assets ([Apple Design Resources](https://developer.apple.com/design/resources/)). The iPhone 15 package reached an embedded Apple Marketing Artwork License prompt on the hosted Mac; it was not accepted automatically. See [MANUAL_STEPS.md](MANUAL_STEPS.md) for the authorized route. The fallback is to capture the complete Simulator device window and measure its display aperture, island, and screen corner radius from that real screenshot. The current `simctl` PNGs show the screen only and are not enough to measure the physical bezel; no frame asset is active yet.
+The app does not draw a guessed Dynamic Island, bezel, or corner radius. Apple Design Resources provides official product bezel assets ([Apple Design Resources](https://developer.apple.com/design/resources/)). The iPhone 15 package reached an embedded Apple Marketing Artwork License prompt on the hosted Mac; it was not accepted automatically. See [MANUAL_STEPS.md](MANUAL_STEPS.md) for the authorized route.
+
+The Device Hub fallback was attempted but did not produce usable measurements. Run `40449012896` completed, but visual review found that its iPhone 17 and iPhone 18 Pro desktop captures showed the iPhone 15 selection, not the target device. Run `40450325952` failed: `screencapture` could not create an image for iPhone 15, and the other captures still showed the iPhone 15 overview/selection. These captures do not establish the correct aperture, Dynamic Island, or screen corner radius for all three models. No frame asset is active and no measurements have been inferred from them. `simctl` PNGs show only screen pixels and cannot supply the outer bezel.
 
 ## Verified profiles
 
