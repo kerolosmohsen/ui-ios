@@ -115,6 +115,8 @@ jobs:
             ios/Pods
             ~/Library/Developer/Xcode/DerivedData/ui-ios-preview
           key: ${{ runner.os }}-${{ inputs.runner_label }}-ios-${{ hashFiles('package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/*.podspec', 'ios/**/*.pbxproj') }}
+          restore-keys: |
+            ${{ inputs.runner_label == 'macos-latest' && format('{0}-ios-{1}', runner.os, hashFiles('package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/*.podspec', 'ios/**/*.pbxproj')) || format('{0}-{1}-ios-', runner.os, inputs.runner_label) }}
 
       - name: Install CocoaPods dependencies
         if: hashFiles('ios/Podfile') != ''
