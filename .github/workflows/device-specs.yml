@@ -17,7 +17,9 @@ permissions:
 jobs:
   verify-simulator-screens:
     name: Verify screen pixels and runtime safe areas
-    runs-on: macos-latest
+    # The current macos-latest image does not include the iPhone 18 Pro simulator.
+    # The Xcode 27 image includes all three exact device models for this Phase 0 check.
+    runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - name: Check out repository
