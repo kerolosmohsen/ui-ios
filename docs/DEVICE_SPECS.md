@@ -28,6 +28,14 @@ The app does not draw a guessed Dynamic Island, bezel, or corner radius. Apple D
 
 ## Verified profiles
 
-On `macos-latest` with macOS 26.6.2, Xcode 26.6 (build 17F113), and iOS 26.5, the iPhone 15 probe measured 393 × 852 pt, 1179 × 2556 px, @3×, safe area 59/34 pt, and status bar 20 pt. The iPhone 17 probe measured 402 × 874 pt, 1206 × 2622 px, @3×, safe area 62/34 pt, and status bar 20 pt. Both screenshots passed the exact pixel checks. The 20 pt status-bar reading is runtime data and produces a warning against the supplied 54 pt reference.
+The strict Phase 0 run on GitHub's `xcode-27` image with iOS 27.0 captured all three screens. All three screenshot pixel sizes matched the table and all three reported @3×. Runtime profiles were:
 
-The first `xcode-27` run (iOS 27.0) confirmed the exact iPhone 18 Pro simulator exists and successfully checked iPhone 17 at 402 × 874 pt, 1206 × 2622 px, @3×, safe area 62/34 pt, and status bar 54 pt. iPhone 15's SDK-path query and iPhone 18 Pro's Swift compile exceeded the initial two-minute process timeout; that timeout is now ten minutes. The strict all-device run is being repeated to obtain the other two profiles.
+| Model | Runtime points | Screenshot pixels | Status bar | Safe area top/bottom |
+| --- | ---: | ---: | ---: | ---: |
+| iPhone 15 | 393 × 852 | 1179 × 2556 | 54 pt | 59/34 pt |
+| iPhone 17 | 402 × 874 | 1206 × 2622 | 54 pt | 62/34 pt |
+| iPhone 18 Pro | 402 × 874 | 1206 × 2622 | 54 pt | 62/34 pt |
+
+The iPhone 18 Pro point size is confirmed by the running simulator and exactly equals its reference pixels divided by 3. The iPhone 17 bottom inset and iPhone 18 Pro status/safe-area values are now measured rather than assumed. Profiles and full-resolution `simctl` screenshots are available in [the successful Phase 0 artifact](https://github.com/kerolosmohsen/ui-ios/actions/runs/40448457522/artifacts/12709214464).
+
+Runtime status-bar values vary by installed iOS runtime. On `macos-latest` with macOS 26.6.2, Xcode 26.6 (build 17F113), and iOS 26.5, iPhone 15 and iPhone 17 measured a 20 pt status bar while retaining the same pixel and safe-area values. The preview logs the mismatch against 54 pt and uses the runtime reading. On iOS 27.0, all three devices measured 54 pt.

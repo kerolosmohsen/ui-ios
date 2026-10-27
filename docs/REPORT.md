@@ -17,9 +17,8 @@
 - `node bin/ui-ios.js --help` and `node bin/ui-ios.js doctor` run successfully.
 - GitHub Pages returned HTTP 200 and the expected simulator UI markers.
 - The Phase 0 macOS proof built and launched a React Native app, streamed simulator frames, and accepted taps. The server-side latency numbers are documented with their scope and limitations.
-- On `macos-latest` with Xcode 26.6 / iOS 26.5, the iPhone 15 and iPhone 17 screenshots passed exact pixel checks at 1179 × 2556 and 1206 × 2622 px. Runtime status bar measured 20 pt; the 54 pt reference is logged as a warning and the runtime value is used.
-- On `xcode-27` / iOS 27.0, iPhone 17 passed at 402 × 874 pt, 1206 × 2622 px, @3×, safe area 62/34 pt, and runtime status bar 54 pt. The image also exposes the exact iPhone 18 Pro device type.
-- The first `xcode-27` all-device run hit the initial 120-second timeout while resolving the iPhone 15 SDK and compiling for iPhone 18 Pro. The probe timeout is now ten minutes and Phase 0 is rerunning.
+- On `macos-latest` with Xcode 26.6 / iOS 26.5, iPhone 15 and iPhone 17 screenshots passed exact pixel checks. Runtime status bar measured 20 pt; the 54 pt reference is logged as a warning and runtime status is used.
+- The full Phase 0 run passed on `xcode-27` / iOS 27.0. iPhone 15 measured 393 × 852 pt, 1179 × 2556 px, safe area 59/34 pt; iPhone 17 and iPhone 18 Pro each measured 402 × 874 pt, 1206 × 2622 px, safe area 62/34 pt. All three measured @3× and status bar 54 pt, and all strict pixel/derived-point checks passed. Evidence: [Phase 0 run and screenshots](https://github.com/kerolosmohsen/ui-ios/actions/runs/40448457522/artifacts/12709214464).
 - Apple bezel extraction stopped at an embedded artwork license prompt and was not accepted automatically. Current `simctl` screenshots do not include the outer phone bezel or a contrasting Dynamic Island; the frame requirement remains pending. No guessed device frame or Dynamic Island geometry is used.
 
 ## Pending end-to-end session
