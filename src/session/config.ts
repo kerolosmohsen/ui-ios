@@ -3,7 +3,7 @@ import path from 'node:path';
 import { DevicePreset, UiIosConfig } from './types';
 
 export const CONFIG_FILE = 'ui-ios.config.json';
-type DeviceCatalog = { version: number; devices: Array<{ id: string; label: string; simulatorNames: string[] }> };
+type DeviceCatalog = { version: number; devices: Array<{ id: string; label: string; runnerLabel: string; simulatorNames: string[] }> };
 const catalogPath = path.resolve(__dirname, '../../templates/runtime/device-catalog.json');
 export const DEVICE_CATALOG: DeviceCatalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as DeviceCatalog;
 if (DEVICE_CATALOG.version !== 1 || !Array.isArray(DEVICE_CATALOG.devices)) {

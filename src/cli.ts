@@ -139,6 +139,8 @@ async function startSession(options: { device?: string; verbose?: boolean; inclu
   if (!fs.existsSync(configFile)) throw new Error(`No ${CONFIG_FILE} found. Run 'ui-ios init' once in this project.`);
   let config = readConfig(cwd);
   const device = normalizeDevice(options.device ?? config.defaultDevice, config.devices);
+  const deviceSpec = DEVICE_CATALOG.devices.find((entry) => entry.id === device);
+  if (!deviceSpec) throw new Error(`Unknown simulator device "${device}".`);
 
   if (!config.warningAcknowledged) {
     console.log(chalk.yellow('GitHub Actions is a CI service, not a persistent remote desktop. This personal preview runs a macOS job for up to 5h30; private-repository macOS minutes are billed at 10× the standard rate and may exceed your included quota.'));
@@ -220,6 +222,7 @@ async function startSession(options: { device?: string; verbose?: boolean; inclu
       session_id: sessionId,
       session_branch: branch,
       device,
+      runner_label: deviceSpec.runnerLabel,
       session_token: token,
     });
     const runId = await github.findRunId(runUrl);

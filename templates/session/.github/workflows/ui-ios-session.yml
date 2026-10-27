@@ -15,6 +15,13 @@ on:
         description: Simulator device catalog ID
         required: true
         type: string
+      runner_label:
+        description: GitHub-hosted runner with the selected simulator model
+        required: true
+        type: choice
+        options:
+          - macos-latest
+          - xcode-27
       session_token:
         description: One-session browser authentication token
         required: true
@@ -31,7 +38,7 @@ concurrency:
 jobs:
   preview:
     name: Build and run iOS Simulator preview
-    runs-on: macos-latest
+    runs-on: ${{ inputs.runner_label == 'xcode-27' && 'xcode-27' || 'macos-latest' }}
     timeout-minutes: 360
     steps:
       - name: Mask the session token before other steps

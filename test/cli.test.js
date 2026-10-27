@@ -136,6 +136,7 @@ test('init writes configuration, adds ignore paths, and preserves them on later 
 test('validates session settings and refuses unsupported device choices', () => {
   assert.deepEqual(validateConfig(JSON.parse(serializeConfig(DEFAULT_CONFIG))), DEFAULT_CONFIG);
   assert.deepEqual(DEVICE_IDS, ['iphone15', 'iphone17', 'iphone18pro']);
+  assert.equal(DEVICE_CATALOG.devices.find((device) => device.id === 'iphone18pro').runnerLabel, 'xcode-27');
   assert.deepEqual(validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone15'] }).devices, ['iphone15']);
   assert.deepEqual(validateConfig({ ...DEFAULT_CONFIG, devices: ['iphone15', 'latest'], defaultDevice: 'latest' }), {
     ...DEFAULT_CONFIG,

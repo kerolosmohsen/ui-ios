@@ -4,6 +4,7 @@
     {
       "id": "iphone15",
       "label": "iPhone 15",
+      "runnerLabel": "macos-latest",
       "simulatorNames": ["iPhone 15"],
       "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-15",
       "expected": {
@@ -21,6 +22,7 @@
     {
       "id": "iphone17",
       "label": "iPhone 17",
+      "runnerLabel": "macos-latest",
       "simulatorNames": ["iPhone 17"],
       "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
       "expected": {
@@ -38,6 +40,7 @@
     {
       "id": "iphone18pro",
       "label": "iPhone 18 Pro",
+      "runnerLabel": "xcode-27",
       "simulatorNames": ["iPhone 18 Pro"],
       "expected": {
         "points": null,

@@ -21,7 +21,9 @@ if (!/^[A-F0-9-]{36}$/i.test(udid)) throw new Error('A valid booted Simulator UD
 if (simulatorName !== expected.simulatorNames[0]) throw new Error(`Expected ${expected.label}; selected simulator is ${simulatorName || 'unknown'}.`);
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 120_000, ...options});
+  // First Xcode 27 simulator launches can spend several minutes resolving the
+  // simulator SDK and compiling this probe. Keep a finite, runner-safe timeout.
+  const result = spawnSync(command, args, {encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 600_000, ...options});
   if (result.status !== 0) {
     throw new Error((result.stderr || result.stdout || result.error?.message || `${command} failed`).trim());
   }
