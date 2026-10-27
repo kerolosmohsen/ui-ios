@@ -11,8 +11,10 @@ extract() {
   local mount="${RUNNER_TEMP}/mount-${device}"
   local destination="${out}/${device}"
   mkdir -p "$mount" "$destination"
-  curl --fail --location --silent --show-error "$url" --output "$disk"
-  hdiutil attach -readonly -nobrowse -mountpoint "$mount" "$disk" >/dev/null
+  curl --fail --location --silent --show-error --write-out "${device} download: HTTP %{http_code}, %{size_download} bytes\n" "$url" --output "$disk"
+  file "$disk"
+  hdiutil imageinfo "$disk"
+  hdiutil attach -readonly -nobrowse -mountpoint "$mount" "$disk"
   while IFS= read -r -d '' png; do
     local relative="${png#"${mount}/"}"
     mkdir -p "${destination}/$(dirname "$relative")"
